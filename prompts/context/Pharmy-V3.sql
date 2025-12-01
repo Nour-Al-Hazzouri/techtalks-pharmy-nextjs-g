@@ -36,7 +36,7 @@ CREATE TABLE "users" (
 
 CREATE TABLE "pharmacies" (
   "id" bigserial PRIMARY KEY,
-  "pharmacist_id" bigserial,
+  "pharmacist_id" bigint,
   "name" varchar,
   "address" text,
   "location" geometry(point,4326),
@@ -53,7 +53,7 @@ CREATE TABLE "pharmacies" (
 
 CREATE TABLE "pharmacy_documents" (
   "id" bigserial PRIMARY KEY,
-  "pharmacy_id" bigserial,
+  "pharmacy_id" bigint,
   "file_path" varchar,
   "doc_type" varchar,
   "created_at" timestamp
@@ -69,18 +69,18 @@ CREATE TABLE "medicines" (
 );
 
 CREATE TABLE "pharmacy_medicines" (
-  "pharmacy_id" bigserial,
-  "medicine_id" bigserial,
+  "pharmacy_id" bigint,
+  "medicine_id" bigint,
   "quantity" int,
   "price" numeric,
-  "available" boolean,
+  "available" boolean DEFAULT true,
   PRIMARY KEY ("pharmacy_id", "medicine_id")
 );
 
 CREATE TABLE "pharmacy_reports" (
   "id" bigserial PRIMARY KEY,
-  "pharmacy_id" bigserial,
-  "user_id" bigserial,
+  "pharmacy_id" bigint,
+  "user_id" bigint,
   "reason" text,
   "report_type" report_type NOT NULL,
   "report_status" report_status DEFAULT 'pending',
