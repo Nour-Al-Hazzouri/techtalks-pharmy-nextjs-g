@@ -992,4 +992,6 @@ label = frontend AND status = "To Do"
 
 ## End of Document
 
+
 This complete workflow guide contains all information needed to set up and manage the Pharmy project in Jira. Keep this document handy throughout the project for reference on sprint goals, task details, labels, and workflow guidelines.
+
