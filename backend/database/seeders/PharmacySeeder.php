@@ -179,7 +179,8 @@ class PharmacySeeder extends Seeder
                 'pharmacist_id' => $user->id,
                 'name' => $data['pharmacy']['name'],
                 'address' => $data['pharmacy']['address'],
-                'location' => DB::raw("ST_SetSRID(ST_MakePoint({$data['pharmacy']['longitude']}, {$data['pharmacy']['latitude']}), 4326)"),
+                'latitude' => $data['pharmacy']['latitude'],
+                'longitude' => $data['pharmacy']['longitude'],
                 'phone' => $data['pharmacy']['phone'],
                 'license_number' => $data['pharmacy']['license_number'],
                 'verification_status' => $data['pharmacy']['verification_status'],
@@ -191,11 +192,11 @@ class PharmacySeeder extends Seeder
             ]);
         }
 
-        // Also create some regular patient users
+        // Create sample patient users
         $patients = [
-            ['name' => 'Alice Patient', 'email' => 'patient1@pharmy.com', 'password' => Hash::make('password'), 'role' => 'patient', 'phone' => '+1234560001'],
-            ['name' => 'Bob Customer', 'email' => 'patient2@pharmy.com', 'password' => Hash::make('password'), 'role' => 'patient', 'phone' => '+1234560002'],
-            ['name' => 'Carol User', 'email' => 'patient3@pharmy.com', 'password' => Hash::make('password'), 'role' => 'patient', 'phone' => '+1234560003'],
+            ['name' => 'Alice Patient', 'email' => 'patient1@pharmy.com', 'password' => Hash::make('password'), 'role' => 'user', 'phone' => '+1234560001'],
+            ['name' => 'Bob Customer', 'email' => 'patient2@pharmy.com', 'password' => Hash::make('password'), 'role' => 'user', 'phone' => '+1234560002'],
+            ['name' => 'Carol User', 'email' => 'patient3@pharmy.com', 'password' => Hash::make('password'), 'role' => 'user', 'phone' => '+1234560003'],
         ];
 
         foreach ($patients as $patient) {
