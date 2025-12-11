@@ -26,22 +26,30 @@ class InventoryController extends Controller
 
     public function index()
     {
-        $user = auth()->user();
-        $pharmacy = $this->pharmacyService->getPharmacyProfile($user);
-        if (!$pharmacy) return $this->errorResponse('Pharmacy not found', [], 404);
-
-        $inventory = $this->medicineService->getInventory($pharmacy);
-        return $this->successResponse('Inventory', MedicineResource::collection($inventory)->response()->getData(true));
+        try {
+            $user = auth()->user();
+            $pharmacy = $this->pharmacyService->getPharmacyProfile($user);
+            if (!$pharmacy) return $this->errorResponse('Pharmacy not found', [], 404);
+    
+            $inventory = $this->medicineService->getInventory($pharmacy);
+            return $this->successResponse('Inventory', MedicineResource::collection($inventory)->response()->getData(true));
+        } catch (\Exception $e) {
+            return $this->errorResponse('Failed to load inventory: ' . $e->getMessage(), [], 500);
+        }
     }
 
     public function store(InventoryRequest $request)
     {
-        $user = auth()->user();
-        $pharmacy = $this->pharmacyService->getPharmacyProfile($user);
-        if (!$pharmacy) return $this->errorResponse('Pharmacy not found', [], 404);
-
-        $this->medicineService->addInventoryItem($pharmacy, $request->validated());
-        return $this->successResponse('Item added to inventory');
+        try {
+            $user = auth()->user();
+            $pharmacy = $this->pharmacyService->getPharmacyProfile($user);
+            if (!$pharmacy) return $this->errorResponse('Pharmacy not found', [], 404);
+    
+            $this->medicineService->addInventoryItem($pharmacy, $request->validated());
+            return $this->successResponse('Item added to inventory');
+        } catch (\Exception $e) {
+            return $this->errorResponse('Failed to add item: ' . $e->getMessage(), [], 500);
+        }
     }
 
     public function update(InventoryRequest $request, $id)
@@ -66,25 +74,29 @@ class InventoryController extends Controller
     
     public function uploadCsv(Request $request)
     {
-        $request->validate(['file' => 'required|file|mimes:csv,txt']);
-        $user = auth()->user();
-        $pharmacy = $this->pharmacyService->getPharmacyProfile($user);
-        if (!$pharmacy) return $this->errorResponse('Pharmacy not found', [], 404);
-        
-        $path = $request->file('file')->getRealPath();
-        $data = CsvParser::parse($path);
-        
-        // Assuming CSV has medicine_id, quantity, price
-        // OR name, quantity, price -> find medicine by name
-        
-        foreach ($data as $row) {
-             // Basic logic assuming medicine_id is present
-             if (isset($row['medicine_id'])) {
-                 $this->medicineService->addInventoryItem($pharmacy, $row);
-             }
+        try {
+            $request->validate(['file' => 'required|file|mimes:csv,txt']);
+            $user = auth()->user();
+            $pharmacy = $this->pharmacyService->getPharmacyProfile($user);
+            if (!$pharmacy) return $this->errorResponse('Pharmacy not found', [], 404);
+            
+            $path = $request->file('file')->getRealPath();
+            $data = CsvParser::parse($path);
+            
+            // Assuming CSV has medicine_id, quantity, price
+            // OR name, quantity, price -> find medicine by name
+            
+            foreach ($data as $row) {
+                 // Basic logic assuming medicine_id is present
+                 if (isset($row['medicine_id'])) {
+                     $this->medicineService->addInventoryItem($pharmacy, $row);
+                 }
+            }
+            
+            return $this->successResponse('CSV Processed');
+        } catch (\Exception $e) {
+            return $this->errorResponse('CSV upload failed: ' . $e->getMessage(), [], 500);
         }
-        
-        return $this->successResponse('CSV Processed');
     }
     
     public function template()

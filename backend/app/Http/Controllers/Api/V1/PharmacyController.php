@@ -23,15 +23,23 @@ class PharmacyController extends Controller
     // Public
     public function index()
     {
-        $pharmacies = $this->pharmacyService->getAllPharmacies();
-        return $this->successResponse('Pharmacies list', PharmacyResource::collection($pharmacies)->response()->getData(true));
+        try {
+            $pharmacies = $this->pharmacyService->getAllPharmacies();
+            return $this->successResponse('Pharmacies list', PharmacyResource::collection($pharmacies)->response()->getData(true));
+        } catch (\Exception $e) {
+            return $this->errorResponse('Failed to retrieve pharmacies: ' . $e->getMessage(), [], 500);
+        }
     }
 
     public function show($id)
     {
-        $pharmacy = $this->pharmacyService->getPharmacy($id);
-        if (!$pharmacy) return $this->errorResponse('Pharmacy not found', [], 404);
-        return $this->successResponse('Pharmacy details', new PharmacyResource($pharmacy));
+        try {
+            $pharmacy = $this->pharmacyService->getPharmacy($id);
+            if (!$pharmacy) return $this->errorResponse('Pharmacy not found', [], 404);
+            return $this->successResponse('Pharmacy details', new PharmacyResource($pharmacy));
+        } catch (\Exception $e) {
+            return $this->errorResponse('Failed to retrieve pharmacy: ' . $e->getMessage(), [], 500);
+        }
     }
 
     public function topRated()
@@ -43,14 +51,18 @@ class PharmacyController extends Controller
     // Pharmacist
     public function register(PharmacyRequest $request)
     {
-        $user = auth()->user();
-        if ($user->role !== 'pharmacist') return $this->errorResponse('Unauthorized', [], 403);
-        
-        // Ensure user doesn't already have one?
-        if ($user->pharmacy) return $this->errorResponse('You already have a pharmacy registered', [], 400);
-
-        $pharmacy = $this->pharmacyService->registerPharmacy($user, $request->validated());
-        return $this->successResponse('Pharmacy registered successfully', new PharmacyResource($pharmacy), 201);
+        try {
+            $user = auth()->user();
+            if ($user->role !== 'pharmacist') return $this->errorResponse('Unauthorized', [], 403);
+            
+            // Ensure user doesn't already have one?
+            if ($user->pharmacy) return $this->errorResponse('You already have a pharmacy registered', [], 400);
+    
+            $pharmacy = $this->pharmacyService->registerPharmacy($user, $request->validated());
+            return $this->successResponse('Pharmacy registered successfully', new PharmacyResource($pharmacy), 201);
+        } catch (\Exception $e) {
+            return $this->errorResponse('Failed to register pharmacy: ' . $e->getMessage(), [], 500);
+        }
     }
     
     public function myProfile()

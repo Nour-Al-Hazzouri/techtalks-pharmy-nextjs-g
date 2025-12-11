@@ -22,8 +22,12 @@ class ReportController extends Controller
 
     public function store(ReportRequest $request)
     {
-        $report = $this->service->createReport(auth()->id(), $request->validated());
-        return $this->successResponse('Report submitted', new ReportResource($report), 201);
+        try {
+            $report = $this->service->createReport(auth()->id(), $request->validated());
+            return $this->successResponse('Report submitted', new ReportResource($report), 201);
+        } catch (\Exception $e) {
+            return $this->errorResponse('Failed to submit report: ' . $e->getMessage(), [], 500);
+        }
     }
 
     public function myReports()
@@ -35,8 +39,12 @@ class ReportController extends Controller
     // Admin
     public function index()
     {
-        $reports = $this->service->getAllReports();
-        return $this->successResponse('All Reports', ReportResource::collection($reports)->response()->getData(true));
+        try {
+            $reports = $this->service->getAllReports();
+            return $this->successResponse('All Reports', ReportResource::collection($reports)->response()->getData(true));
+        } catch (\Exception $e) {
+            return $this->errorResponse('Failed to retrieve reports: ' . $e->getMessage(), [], 500);
+        }
     }
     
     public function show($id)
@@ -48,10 +56,14 @@ class ReportController extends Controller
 
     public function updateStatus(Request $request, $id)
     {
-        $request->validate(['status' => 'required|in:pending,resolved,dismissed', 'notes' => 'nullable|string']);
-        $report = $this->service->updateStatus($id, $request->status, $request->notes);
-        if (!$report) return $this->errorResponse('Not found', [], 404);
-        return $this->successResponse('Report status updated', new ReportResource($report));
+        try {
+            $request->validate(['status' => 'required|in:pending,resolved,dismissed', 'notes' => 'nullable|string']);
+            $report = $this->service->updateStatus($id, $request->status, $request->notes);
+            if (!$report) return $this->errorResponse('Not found', [], 404);
+            return $this->successResponse('Report status updated', new ReportResource($report));
+        } catch (\Exception $e) {
+            return $this->errorResponse('Failed to update report: ' . $e->getMessage(), [], 500);
+        }
     }
     
     public function statistics()
