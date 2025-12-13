@@ -63,5 +63,31 @@ make 1 modification and 1 addition... search bar that expands... show pharmacy d
 - `frontend/lib/mock-data.ts` (Added fields)
 - `frontend/components/features/map/MapPageContainer.tsx` (State logic)
 - `frontend/components/features/map/MapHeader.tsx` (Added search bar)
+
+## Log Entry #3 - 2025-12-13T10:35:00+02:00 (Reverted & Replaced)
+
+### 🎯 User Prompt
+**Context**: User requested custom pharmacy icons. (Previous geolocation request was reverted by user).
+**Request**: 
+```
+Change pharmacy locations marker to be custom pharmacy icon instead of a blue arrow
+```
+
+### 🤖 AI Response Summary
+**Action Taken**:
+1.  **Icon Logic**: Modified `PharmacyMap.tsx` to replace default `L.Icon` with `L.DivIcon`.
+2.  **Custom SVG**: Implemented `createPharmacyIcon` function which renders a **Lucide Pill** icon inside a styled `div`.
+3.  **Dynamic Styling**:
+    -   **Open**: Pink/Red border & icon (`#E91E63`).
+    -   **Closed**: Gray border & icon.
+
+**Reasoning**:
+-   Custom SVG markers provide a much better brand experience than the default blue pins.
+-   Using `renderToString` with Lucide icons allows leveraging the existing icon system without managing external SVG files.
+
+### 📁 Files Modified/Created
+#### Modified Files:
+-   `frontend/components/features/map/PharmacyMap.tsx`
+
 `PharmacyList`, `PharmacyCard`, `MapHeader`.
 2.  Layout: `app/(public)/map/page.tsx` (New route or replace home? Probably `/map`).
