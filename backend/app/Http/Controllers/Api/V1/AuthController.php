@@ -9,6 +9,7 @@ use App\Http\Requests\RegisterRequest;
 use App\Traits\ApiResponse;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
@@ -24,6 +25,7 @@ class AuthController extends Controller
     public function register(RegisterRequest $request)
     {
         $user = $this->authService->register($request->validated());
+          $token = auth('api')->login($user);
         return $this->successResponse('User registered successfully', new UserResource($user), 201);
     }
 
@@ -33,7 +35,7 @@ class AuthController extends Controller
         if (!$token) {
             return $this->errorResponse('Unauthorized', [], 401);
         }
-        
+
         $user = auth('api')->user();
 
         // If auth('api')->user() is still null (sometimes happens depending on JWT setup/middleware state in the same request), explicitly get via email
@@ -69,7 +71,7 @@ class AuthController extends Controller
     {
         return $this->successResponse('User profile', new UserResource($this->authService->userProfile()));
     }
-    
+
     public function updateProfile(Request $request)
     {
          // Needs validation but simplified for now to keep it in one file or reuse request
@@ -77,11 +79,33 @@ class AuthController extends Controller
          $user->update($request->only(['name', 'phone']));
          return $this->successResponse('Profile updated', new UserResource($user));
     }
-    
+
     public function updatePassword(Request $request)
+
     {
-        $request->validate(['password' => 'required|min:6']);
-        auth()->user()->update(['password' => \Illuminate\Support\Facades\Hash::make($request->password)]);
-        return $this->successResponse('Password updated');
+        $request->validate([
+            'old_password' => 'required|string',
+            'new_password' => 'required|string|min:6|confirmed'
+        ]);
+
+        $user = auth()->user();
+
+        if (!Hash::check($request->old_password, $user->password)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Old password is incorrect'
+            ], 400);
+        }
+
+        $user->update([
+            'password' => Hash::make($request->new_password)
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Password changed successfully'
+        ]);
     }
-}
+
+    }
+

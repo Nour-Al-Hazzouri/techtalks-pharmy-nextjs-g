@@ -22,4 +22,8 @@ class PharmacyMedicine extends Pivot
         'available' => 'boolean',
         'price' => 'decimal:2',
     ];
+    public function medicine()
+{
+    return $this->belongsTo(Medicine::class, 'medicine_id');
+}
 }

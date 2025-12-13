@@ -30,7 +30,7 @@ class InventoryController extends Controller
             $user = auth()->user();
             $pharmacy = $this->pharmacyService->getPharmacyProfile($user);
             if (!$pharmacy) return $this->errorResponse('Pharmacy not found', [], 404);
-    
+
             $inventory = $this->medicineService->getInventory($pharmacy);
             return $this->successResponse('Inventory', MedicineResource::collection($inventory)->response()->getData(true));
         } catch (\Exception $e) {
@@ -44,7 +44,7 @@ class InventoryController extends Controller
             $user = auth()->user();
             $pharmacy = $this->pharmacyService->getPharmacyProfile($user);
             if (!$pharmacy) return $this->errorResponse('Pharmacy not found', [], 404);
-    
+
             $this->medicineService->addInventoryItem($pharmacy, $request->validated());
             return $this->successResponse('Item added to inventory');
         } catch (\Exception $e) {
@@ -71,7 +71,7 @@ class InventoryController extends Controller
         $this->medicineService->deleteInventoryItem($pharmacy, $id);
         return $this->successResponse('Item removed from inventory');
     }
-    
+
     public function uploadCsv(Request $request)
     {
         try {
@@ -79,26 +79,26 @@ class InventoryController extends Controller
             $user = auth()->user();
             $pharmacy = $this->pharmacyService->getPharmacyProfile($user);
             if (!$pharmacy) return $this->errorResponse('Pharmacy not found', [], 404);
-            
+
             $path = $request->file('file')->getRealPath();
             $data = CsvParser::parse($path);
-            
+
             // Assuming CSV has medicine_id, quantity, price
             // OR name, quantity, price -> find medicine by name
-            
+
             foreach ($data as $row) {
                  // Basic logic assuming medicine_id is present
                  if (isset($row['medicine_id'])) {
                      $this->medicineService->addInventoryItem($pharmacy, $row);
                  }
             }
-            
+
             return $this->successResponse('CSV Processed');
         } catch (\Exception $e) {
             return $this->errorResponse('CSV upload failed: ' . $e->getMessage(), [], 500);
         }
     }
-    
+
     public function template()
     {
         // Return a simple CSV content or link
@@ -107,10 +107,63 @@ class InventoryController extends Controller
             'Content-Disposition' => 'attachment; filename="template.csv"',
         ]);
     }
-    
-    public function export()
+
+
+   public function export()
     {
-        // Export logic... simplified
-        return $this->successResponse('Export not fully implemented in this demo', []);
+        try {
+            $user = auth()->user();
+            $pharmacy = $this->pharmacyService->getPharmacyProfile($user);
+
+            if (!$pharmacy) {
+                return $this->errorResponse('Pharmacy not found', [], 404);
+            }
+
+            // IMPORTANT: load inventory WITH medicine relation
+            $inventory = $pharmacy->inventory()->with('medicine')->get();
+
+            $fileName = 'inventory_' . now()->format('Y_m_d_His') . '.csv';
+
+            $headers = [
+                'Content-Type' => 'text/csv',
+                'Content-Disposition' => "attachment; filename=\"$fileName\"",
+            ];
+
+            $callback = function () use ($inventory) {
+                $file = fopen('php://output', 'w');
+
+                // CSV Header
+                fputcsv($file, [
+                    'medicine_id',
+                    'medicine_name',
+                    'quantity',
+                    'price',
+                    'available'
+                ]);
+
+                foreach ($inventory as $item) {
+                    fputcsv($file, [
+                        $item->medicine_id,
+                        optional($item->medicine)->name, // SAFE ACCESS
+                        $item->quantity,
+                        $item->price,
+                        $item->available ? 'yes' : 'no',
+                    ]);
+                }
+
+                fclose($file);
+            };
+
+            return response()->stream($callback, 200, $headers);
+
+        } catch (\Exception $e) {
+            return $this->errorResponse(
+                'Export failed: ' . $e->getMessage(),
+                [],
+                500
+            );
+        }
     }
+
+
 }
