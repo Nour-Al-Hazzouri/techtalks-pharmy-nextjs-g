@@ -198,3 +198,27 @@ when I search... sidebar must automatically open
 
 `PharmacyList`, `PharmacyCard`, `MapHeader`.
 2.  Layout: `app/(public)/map/page.tsx` (New route or replace home? Probably `/map`).
+
+## Log Entry #11 - 2025-12-13T12:40:00+02:00
+
+### 🎯 User Prompt
+**Context**: User requested that the map be empty initially, and only show results after Searching.
+**Request**: 
+```
+no markers on the map or results before making search query... clicking clear search result also it should make the same effect
+```
+
+### 🤖 AI Response Summary
+**Action Taken**:
+1.  **Filter Logic**: Updated `MapPageContainer` to return `[]` (empty array) for `filteredPharmacies` if `searchQuery` is empty. Previously it returned all mocks.
+2.  **Sidebar UX**: Introduced a "Welcome State" (Find Your Medicine) in the sidebar when no search is active, instead of showing an empty list or an error message.
+3.  **Clear Action**: Since "Clear" just resets `searchQuery` to `""`, it now automatically triggers this empty/welcome state.
+
+**Reasoning**:
+-   Aligns with the user's request for a cleaner initial interface.
+-   Provides clear guidance on how to use the map (via the sidebar prompt) instead of just showing a blank screen.
+
+### 📁 Files Modified/Created
+#### Modified Files:
+-   `frontend/components/features/map/MapPageContainer.tsx`
+

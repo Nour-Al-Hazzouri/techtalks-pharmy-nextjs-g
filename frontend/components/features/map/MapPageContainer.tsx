@@ -6,7 +6,7 @@ import { MapHeader } from "@/components/features/map/MapHeader"
 import { PharmacyList } from "@/components/features/map/PharmacyList"
 import { PharmacyDetails } from "@/components/features/map/PharmacyDetails"
 import { MOCK_PHARMACIES, Pharmacy } from "@/lib/mock-data"
-import { ChevronRight, ChevronLeft } from "lucide-react"
+import { ChevronRight, ChevronLeft, Search } from "lucide-react"
 
 const PharmacyMap = dynamic(
     () => import("@/components/features/map/PharmacyMap"),
@@ -23,7 +23,7 @@ export function MapPageContainer() {
 
     // Filter pharmacies based on search query (checking availability)
     const filteredPharmacies = React.useMemo(() => {
-        if (!searchQuery) return MOCK_PHARMACIES
+        if (!searchQuery) return [] // No results initially
         return MOCK_PHARMACIES.filter(pharmacy =>
             pharmacy.availability?.some(medicine =>
                 medicine.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -88,6 +88,16 @@ export function MapPageContainer() {
                             pharmacy={selectedPharmacy}
                             onBack={handleBackToList}
                         />
+                    ) : !searchQuery ? (
+                        <div className="flex flex-col items-center justify-center h-full p-8 text-center bg-gray-50/50">
+                            <div className="bg-pink-50 p-4 rounded-full mb-4">
+                                <Search className="h-8 w-8 text-[#E91E63]" />
+                            </div>
+                            <h3 className="text-lg font-semibold text-gray-900 mb-1">Find Your Medicine</h3>
+                            <p className="text-sm text-gray-500 max-w-xs mx-auto">
+                                Search for a medicine above to see which pharmacies have it in stock.
+                            </p>
+                        </div>
                     ) : (
                         <PharmacyList pharmacies={filteredPharmacies} onSelect={handlePharmacySelect} />
                     )}
