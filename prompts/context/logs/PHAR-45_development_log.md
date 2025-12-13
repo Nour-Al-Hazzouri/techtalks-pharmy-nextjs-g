@@ -89,5 +89,28 @@ Change pharmacy locations marker to be custom pharmacy icon instead of a blue ar
 #### Modified Files:
 -   `frontend/components/features/map/PharmacyMap.tsx`
 
+## Log Entry #6 - 2025-12-13T11:05:00+02:00
+
+### 🎯 User Prompt
+**Context**: User requested a way to "clear" the search to find new medicine.
+**Request**: 
+```
+add clear search functionality... return the user to the main search screen... okay if redirects to a page that doesn't exist for now
+```
+
+### 🤖 AI Response Summary
+**Action Taken**:
+1.  **UI Update**: Added a small `X` (Close) button next to the "Searching for: ..." text in `MapHeader.tsx`.
+2.  **Navigation**: Wired the button to `router.push('/')` (Home/Root), effectively clearing the current search context.
+
+**Reasoning**:
+-   The "Search Context" is currently visual ("Searching for: Paracetamol"). A clear close action next to it is the standard UX pattern.
+-   Redirecting to root (`/`) serves as the "Main Search Screen" placeholder as requested.
+
+### 📁 Files Modified/Created
+#### Modified Files:
+-   `frontend/components/features/map/MapHeader.tsx`
+
+
 `PharmacyList`, `PharmacyCard`, `MapHeader`.
 2.  Layout: `app/(public)/map/page.tsx` (New route or replace home? Probably `/map`).
