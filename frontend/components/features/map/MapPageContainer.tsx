@@ -43,6 +43,7 @@ export function MapPageContainer() {
     const handleSearch = (term: string) => {
         setSearchQuery(term)
         setSelectedPharmacy(null) // Reset selection when searching
+        setIsPanelOpen(true) // Auto-open panel on search
     }
 
     const handleClearSearch = () => {
@@ -75,8 +76,11 @@ export function MapPageContainer() {
                 {/* Helper Panel - List or Details */}
                 <aside
                     className={`
-                        w-full md:w-[400px] bg-white flex flex-col transition-all duration-300 ease-in-out absolute md:relative z-[500] h-full shadow-xl md:shadow-none
-                        ${isPanelOpen ? 'translate-x-0' : 'translate-x-full md:grid-cols-[1fr_0] md:w-0 md:opacity-0 md:overflow-hidden'}
+                        bg-white flex flex-col transition-[width,transform,opacity] duration-300 ease-in-out absolute md:relative z-[500] h-full shadow-xl md:shadow-none right-0
+                        ${isPanelOpen
+                            ? 'w-full md:w-[400px] translate-x-0 opacity-100'
+                            : 'w-full md:w-0 translate-x-full md:translate-x-0 md:opacity-0 overflow-hidden'
+                        }
                     `}
                 >
                     {selectedPharmacy ? (

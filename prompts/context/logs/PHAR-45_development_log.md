@@ -164,6 +164,32 @@ add "no results" message... using the mock data that is currently here...
 ### 📁 Files Modified/Created
 #### Modified Files:
 -   `frontend/components/features/map/ExpandableSearchBar.tsx`
+
+## Log Entry #10 - 2025-12-13T12:20:00+02:00
+
+### 🎯 User Prompt
+**Context**: User reported layout issues with the sidebar covering the map when closed, and requested auto-open on search.
+**Request**: 
+```
+close the sidebar... space it took is still existing...
+when I search... sidebar must automatically open
+```
+
+### 🤖 AI Response Summary
+**Action Taken**:
+1.  **Layout Logic**: Refactored the `aside` classes in `MapPageContainer`.
+    -   **Mobile**: Uses `translate-x-full` to slide off-screen (absolute positioning).
+    -   **Desktop**: Uses `w-0` and `overflow-hidden` (relative positioning) to fully collapse the element and reclaim the space for the map.
+2.  **Interaction**: Updated `handleSearch` to explicitly call `setIsPanelOpen(true)`.
+
+**Reasoning**:
+-   Ensures the "Fullscreen Map" promise is kept when the user wants to hide the list.
+-    Improves UX by immediate feedback (showing results) when a search is triggered.
+
+### 📁 Files Modified/Created
+#### Modified Files:
+-   `frontend/components/features/map/MapPageContainer.tsx`
+
 -   `frontend/components/features/map/MapHeader.tsx`
 -   `frontend/components/features/map/MapPageContainer.tsx`
 
