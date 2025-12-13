@@ -222,3 +222,69 @@ no markers on the map or results before making search query... clicking clear se
 #### Modified Files:
 -   `frontend/components/features/map/MapPageContainer.tsx`
 
+## Log Entry #12 - 2025-12-13T16:45:00+02:00
+
+### 🎯 User Prompt
+**Context**: User requested a responsive layout for mobile screens.
+**Request**: 
+```
+on desktop... side bar...
+on mobile... map with a search bar on top... drawer that opens and fills half the screen, then the user can expand
+```
+
+### 🤖 AI Response Summary
+**Action Taken**:
+1.  **Dependencies**: Installed `vaul` to provide native-like drawer behavior (snap points, gestures).
+2.  **Components**:
+    -   Created `hooks/use-media-query.ts` to detect Desktop (`min-width: 768px`) vs Mobile.
+    -   Created `components/ui/drawer.tsx` wrapping `vaul` primitives.
+3.  **Layout Logic**: Refactored `MapPageContainer`:
+    -   **Desktop**: Renders the existing `aside` Sidebar.
+    -   **Mobile**: Renders the new `Drawer` component (hidden initially).
+4.  **Interaction**:
+    -   **Initial State**: Mobile drawer is closed (`open=false`) to show the full map as requested.
+    -   **Search**: Triggers drawer open to `snap: 0.5` (Half Screen).
+    -   **Details**: Selecting a pharmacy expands drawer to `snap: 1` (Full Screen). Back button returns to `0.5`.
+
+**Reasoning**:
+-   Used a "Drawer" pattern on mobile as it maximizes map visibility while keeping list/details accessible via a familiar gesture-driven interface.
+-   Reused the internal content (`PharmacyList`, `PharmacyDetails`) to ensure feature parity across devices.
+
+### 📁 Files Modified/Created
+#### New Files:
+-   `frontend/hooks/use-media-query.ts`
+-   `frontend/components/ui/drawer.tsx`
+
+#### Modified Files:
+-   `frontend/components/features/map/MapPageContainer.tsx`
+
+## Log Entry #13 - 2025-12-13T16:55:00+02:00
+
+### 🎯 User Prompt
+**Context**: User reported header overflow on small screens (<300px), specifically text wrapping and button squeezing.
+**Request**: 
+```
+The header overflows on screens smaller than 300px
+```
+**Attachments**: Screenshot showing "Pharmacy Finder" stacking with Search bar.
+
+### 🤖 AI Response Summary
+**Action Taken**:
+1.  **Text Truncation**: Added `truncate` and `min-w-0` to the header text container.
+    -   When space is tight, "Pharmacy Finder" title and "Searching for" text explicitly truncate instead of wrapping.
+2.  **Adaptive Content**:
+    -   On small screens (Mobile), the text shortens: "Searching for: Panadol" -> "For: Panadol".
+    -   Hidden the "Search" text label in the search button on screens < 380px (Icon-only button).
+3.  **Layout**: Reduced header padding from `px-6` to `px-3` on small screens to gain 24px of width.
+
+**Reasoning**:
+-   Prioritized the "Search Bar" and "Search Context" (the query) over the generic App Title on small screens.
+-   Prevented layout breakage on devices like iPhone SE or Fold-cover displays.
+
+### 📁 Files Modified/Created
+#### Modified Files:
+-   `frontend/components/features/map/MapHeader.tsx`
+-   `frontend/components/features/map/ExpandableSearchBar.tsx`
+
+
+

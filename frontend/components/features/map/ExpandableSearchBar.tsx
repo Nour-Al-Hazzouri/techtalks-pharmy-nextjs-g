@@ -39,10 +39,10 @@ export function ExpandableSearchBar({ onSearch }: ExpandableSearchBarProps) {
                     className="flex items-center gap-2 text-sm font-medium text-[#E91E63] hover:bg-pink-50 px-3 py-1.5 rounded-full transition-colors"
                 >
                     <Search className="h-4 w-4" />
-                    <span>Search</span>
+                    <span className="hidden min-[380px]:inline">Search</span>
                 </button>
             ) : (
-                <div className="relative flex items-center w-64 animate-in fade-in slide-in-from-right-10 duration-200">
+                <div className="relative flex items-center w-48 sm:w-64 animate-in fade-in slide-in-from-right-10 duration-200">
                     <Search className="absolute left-3 text-gray-400 h-4 w-4" />
                     <Input
                         ref={inputRef}
