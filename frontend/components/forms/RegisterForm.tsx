@@ -59,7 +59,7 @@ export function RegisterForm() {
     }
 
     return (
-        <div className="w-full max-w-md mx-auto p-4 space-y-6">
+        <div className="w-full max-w-md mx-auto p-6 md:p-8 space-y-6 border border-border bg-muted/40 rounded-3xl min-w-[340px]">
             <div className="bg-[#E91E63] text-white p-8 rounded-[30px] rounded-bl-[60px] shadow-xl relative overflow-hidden mb-8">
                 <div className="relative z-10">
                     <h1 className="text-3xl font-bold mb-2">CREATE ACCOUNT</h1>
