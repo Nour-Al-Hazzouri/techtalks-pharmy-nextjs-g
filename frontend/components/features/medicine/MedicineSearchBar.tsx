@@ -8,27 +8,8 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { useDebounce } from "@/hooks/use-debounce"
+import { MOCK_MEDICINES, POPULAR_SEARCHES } from "@/lib/mock-data"
 
-// Mock data for autocomplete
-const MOCK_MEDICINES = [
-    "Panadol",
-    "Panadol Extra",
-    "Panadol Cold & Flu",
-    "Panadol Night",
-    "Paracetamol",
-    "Insulin",
-    "Insulin Aspart",
-    "Ibuprofen",
-    "Aspirin",
-    "Amoxicillin",
-    "Augmentin",
-    "Vitamin C",
-    "Vitamin D",
-    "Zinc",
-    "Magnesium",
-]
-
-const POPULAR_SEARCHES = ["Insulin", "Paracetamol", "Aspirin", "Amoxicillin"]
 
 export function MedicineSearchBar() {
     const router = useRouter()

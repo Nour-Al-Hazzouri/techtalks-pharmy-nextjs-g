@@ -4,6 +4,7 @@ import * as React from "react"
 import { Search, X } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
+import { MOCK_MEDICINES } from "@/lib/mock-data"
 
 interface ExpandableSearchBarProps {
     onSearch?: (term: string) => void
@@ -77,7 +78,7 @@ export function ExpandableSearchBar({ onSearch }: ExpandableSearchBarProps) {
                     {query.length > 0 && (
                         <div className="absolute top-full right-0 left-0 mt-2 bg-white shadow-lg rounded-xl border border-gray-100 p-2 z-50">
                             <div className="px-2 py-1.5 text-xs text-gray-500 font-medium">Results</div>
-                            {['Panadol', 'Aspirin', 'Insulin', 'Amoxicillin'].filter(i => i.toLowerCase().includes(query.toLowerCase())).map(item => (
+                            {MOCK_MEDICINES.filter(i => i.toLowerCase().includes(query.toLowerCase())).map(item => (
                                 <div
                                     key={item}
                                     onClick={() => handleSearch(item)}

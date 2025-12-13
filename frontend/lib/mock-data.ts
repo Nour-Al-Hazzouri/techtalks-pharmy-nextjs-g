@@ -112,3 +112,24 @@ export const MOCK_PHARMACIES: Pharmacy[] = [
         availability: []
     },
 ]
+
+export const MOCK_MEDICINES = [
+    "Panadol",
+    "Panadol Extra",
+    "Panadol Cold & Flu",
+    "Panadol Night",
+    "Paracetamol",
+    "Insulin",
+    "Insulin Aspart",
+    "Ibuprofen",
+    "Aspirin",
+    "Amoxicillin",
+    "Augmentin",
+    "Vitamin C",
+    "Vitamin D",
+    "Zinc",
+    "Magnesium",
+]
+
+export const POPULAR_SEARCHES = ["Insulin", "Paracetamol", "Aspirin", "Amoxicillin"]
+
