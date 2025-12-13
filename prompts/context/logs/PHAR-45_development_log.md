@@ -111,6 +111,64 @@ add clear search functionality... return the user to the main search screen... o
 #### Modified Files:
 -   `frontend/components/features/map/MapHeader.tsx`
 
+## Log Entry #7 - 2025-12-13T11:20:00+02:00
+
+### 🎯 User Prompt
+**Context**: User requested an "Empty State" for when no pharmacies are found.
+**Request**: 
+```
+Add an empty state for no results... to be edited later with correct results...
+```
+
+### 🤖 AI Response Summary
+**Action Taken**:
+1.  **Component**: Created reusable `components/ui/empty-state.tsx`.
+2.  **Refactoring**: Lifted `MOCK_PHARMACIES` constant from `PharmacyList`/`PharmacyMap` up to `MapPageContainer`.
+3.  **Data Flow**: Now passing `pharmacies` as a prop to both children.
+4.  **Logic**: `PharmacyList` now checks `if (pharmacies.length === 0)` and renders `<EmptyState />` if true.
+
+**Reasoning**:
+-   This prepares the architecture for "real data". Instead of hardcoded mocks inside components, they now simply display whatever array is passed to them.
+-   The empty state will automatically appear once we connect the API and a search returns 0 results.
+
+### 📁 Files Modified/Created
+#### New Files:
+-   `frontend/components/ui/empty-state.tsx`
+
+#### Modified Files:
+-   `frontend/components/features/map/PharmacyList.tsx`
+-   `frontend/components/features/map/PharmacyMap.tsx`
+-   `frontend/components/features/map/MapPageContainer.tsx`
+
+## Log Entry #8 - 2025-12-13T11:40:00+02:00
+
+### 🎯 User Prompt
+**Context**: User clarified "Empty State" should look like "No results" when searching for missing medicines.
+**Request**: 
+```
+add "no results" message... using the mock data that is currently here...
+```
+
+### 🤖 AI Response Summary
+**Action Taken**:
+1.  **Search Logic**: Connected the `ExpandableSearchBar` to the main map state.
+2.  **Filtering**: Implemented logic in `MapPageContainer` to filter `MOCK_PHARMACIES` based on the medicine search term (checking `pharmacy.availability`).
+3.  **UI Updates**:
+    -   `MapHeader` now displays the *actual* search term dynamically.
+    -   Clicking "Clear" (X) resets the filter.
+    -   Searching for a term not in the mock data (e.g. "Xyz") triggers the empty array -> showing the empty state.
+
+**Reasoning**:
+-   This makes the mock prototype fully interactive. The user can now verify the "Search -> No Results -> Empty State" flow end-to-end.
+
+### 📁 Files Modified/Created
+#### Modified Files:
+-   `frontend/components/features/map/ExpandableSearchBar.tsx`
+-   `frontend/components/features/map/MapHeader.tsx`
+-   `frontend/components/features/map/MapPageContainer.tsx`
+
+
+
 
 `PharmacyList`, `PharmacyCard`, `MapHeader`.
 2.  Layout: `app/(public)/map/page.tsx` (New route or replace home? Probably `/map`).

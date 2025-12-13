@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { MapContainer, TileLayer, Marker, Popup, ZoomControl } from "react-leaflet"
 import "leaflet/dist/leaflet.css"
 import L from "leaflet"
-import { MOCK_PHARMACIES, Pharmacy } from "@/lib/mock-data"
+import { Pharmacy } from "@/lib/mock-data"
 import { renderToString } from 'react-dom/server'
 import { Pill } from "lucide-react"
 
@@ -34,10 +34,11 @@ const createPharmacyIcon = (status: string) => {
 }
 
 interface PharmacyMapProps {
+    pharmacies: Pharmacy[]
     onSelect: (pharmacy: Pharmacy) => void
 }
 
-export default function PharmacyMap({ onSelect }: PharmacyMapProps) {
+export default function PharmacyMap({ pharmacies, onSelect }: PharmacyMapProps) {
     // Ensure map only renders on client
     const [isMounted, setIsMounted] = useState(false)
 
@@ -60,7 +61,7 @@ export default function PharmacyMap({ onSelect }: PharmacyMapProps) {
             />
             <ZoomControl position="bottomright" />
 
-            {MOCK_PHARMACIES.map((pharmacy) => (
+            {pharmacies.map((pharmacy) => (
                 <Marker
                     key={pharmacy.id}
                     position={pharmacy.coordinates}
