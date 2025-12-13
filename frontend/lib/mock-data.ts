@@ -1,3 +1,9 @@
+export interface MedicineStock {
+    name: string
+    stock: "In Stock" | "Low Stock" | "Out of Stock"
+    quantity: string
+}
+
 export interface Pharmacy {
     id: string
     name: string
@@ -8,6 +14,9 @@ export interface Pharmacy {
     status: "Open" | "Closing soon" | "Closed"
     closingTime?: string
     coordinates: [number, number] // [lat, lng]
+    email?: string
+    workingHours?: string
+    availability?: MedicineStock[]
 }
 
 export const MOCK_PHARMACIES: Pharmacy[] = [
@@ -20,7 +29,14 @@ export const MOCK_PHARMACIES: Pharmacy[] = [
         phone: "+971 4 123 4567",
         status: "Open",
         closingTime: "22:00",
-        coordinates: [33.8938, 35.5018], // Example Beirut coords
+        coordinates: [33.8938, 35.5018],
+        email: "aster.downtown@pharmacy.ae",
+        workingHours: "08:00 - 22:00",
+        availability: [
+            { name: "Insulin Apidra", stock: "In Stock", quantity: "2/2" },
+            { name: "Paracetamol 500mg", stock: "In Stock", quantity: "10/10" },
+            { name: "Amoxicillin", stock: "Low Stock", quantity: "1/5" }
+        ]
     },
     {
         id: "2",
@@ -32,6 +48,12 @@ export const MOCK_PHARMACIES: Pharmacy[] = [
         status: "Open",
         closingTime: "20:00",
         coordinates: [33.8886, 35.4955],
+        email: "healthplus@pharmacy.com",
+        workingHours: "09:00 - 20:00",
+        availability: [
+            { name: "Panadol Extra", stock: "In Stock", quantity: "20+" },
+            { name: "Vitamin C", stock: "Out of Stock", quantity: "0" }
+        ]
     },
     {
         id: "3",
@@ -42,6 +64,11 @@ export const MOCK_PHARMACIES: Pharmacy[] = [
         phone: "+1 234 567 8902",
         status: "Closing soon",
         coordinates: [33.8900, 35.4800],
+        email: "info@mediquick.com",
+        workingHours: "24 Hours",
+        availability: [
+            { name: "Aspirin", stock: "In Stock", quantity: "50+" }
+        ]
     },
     {
         id: "4",
@@ -53,6 +80,9 @@ export const MOCK_PHARMACIES: Pharmacy[] = [
         status: "Open",
         closingTime: "21:00",
         coordinates: [33.8950, 35.5100],
+        email: "contact@wellcare.com",
+        workingHours: "08:00 - 21:00",
+        availability: []
     },
     {
         id: "5",
@@ -63,6 +93,9 @@ export const MOCK_PHARMACIES: Pharmacy[] = [
         phone: "+1 234 567 8904",
         status: "Closed",
         coordinates: [33.9000, 35.5000],
+        email: "support@quickmed.com",
+        workingHours: "08:00 - 18:00",
+        availability: []
     },
     {
         id: "6",
@@ -74,5 +107,8 @@ export const MOCK_PHARMACIES: Pharmacy[] = [
         status: "Open",
         closingTime: "23:00",
         coordinates: [33.8800, 35.5050],
+        email: "family@pharmacy.com",
+        workingHours: "10:00 - 23:00",
+        availability: []
     },
 ]

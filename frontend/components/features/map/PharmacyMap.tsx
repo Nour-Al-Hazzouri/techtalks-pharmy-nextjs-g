@@ -13,8 +13,6 @@ const shadowUrl = "https://unpkg.com/leaflet@1.9.3/dist/images/marker-shadow.png
 
 // Create custom icons based on status
 const createCustomIcon = (color: string) => {
-    // Ideally use SVGs or specific marker images. Using CSS standard filters or replacement for simplicity in this demo.
-    // For now, we will use the standard blue icon but in a real app would use custom marker assets.
     return new L.Icon({
         iconUrl: iconUrl,
         iconRetinaUrl: iconRetinaUrl,
@@ -28,7 +26,11 @@ const createCustomIcon = (color: string) => {
 
 const defaultIcon = createCustomIcon("blue")
 
-export default function PharmacyMap() {
+interface PharmacyMapProps {
+    onSelect: (pharmacy: Pharmacy) => void
+}
+
+export default function PharmacyMap({ onSelect }: PharmacyMapProps) {
     // Ensure map only renders on client
     const [isMounted, setIsMounted] = useState(false)
 
@@ -43,7 +45,7 @@ export default function PharmacyMap() {
             center={[33.8938, 35.5018]} // Beirut Center
             zoom={13}
             className="w-full h-full z-0"
-            zoomControl={false} // Custom placement if needed, or default
+            zoomControl={false}
         >
             <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -56,6 +58,11 @@ export default function PharmacyMap() {
                     key={pharmacy.id}
                     position={pharmacy.coordinates}
                     icon={defaultIcon}
+                    eventHandlers={{
+                        click: () => {
+                            onSelect(pharmacy)
+                        }
+                    }}
                 >
                     <Popup>
                         <div className="font-semibold">{pharmacy.name}</div>

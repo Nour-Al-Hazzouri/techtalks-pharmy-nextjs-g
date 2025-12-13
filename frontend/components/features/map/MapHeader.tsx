@@ -1,5 +1,8 @@
+"use client"
+
 import { MapPin } from "lucide-react"
 import Link from "next/link"
+import { ExpandableSearchBar } from "./ExpandableSearchBar"
 
 export function MapHeader() {
     return (
@@ -14,9 +17,7 @@ export function MapHeader() {
                 </div>
             </div>
             <div>
-                <Link href="/" className="text-sm font-medium text-[#E91E63] hover:text-[#D81B60] hover:underline">
-                    New Search
-                </Link>
+                <ExpandableSearchBar />
             </div>
         </header>
     )
