@@ -37,8 +37,14 @@ export function LoginForm() {
         try {
             // TODO: Call API endpoint
             console.log(data)
-            await new Promise((resolve) => setTimeout(resolve, 2000)) // Simulate API
-            router.push('/dashboard')
+            await new Promise((resolve) => setTimeout(resolve, 1500)) // Simulate API
+
+            // Set mock auth cookie
+            document.cookie = "auth_token=mock_jwt_token; path=/; max-age=86400; SameSite=Lax"
+
+            // Redirect to Home (Search Page)
+            router.push('/')
+            router.refresh() // Refresh to update middleware state
         } catch (error) {
             console.error(error)
         } finally {

@@ -49,8 +49,15 @@ export function RegisterForm() {
         setIsPending(true)
         try {
             // Form validation is handled by react-hook-form before this function is called
-            // Just redirect for now as requested
-            router.push(data.role === 'pharmacy' ? '/dashboard' : '/map')
+            // Simulate API
+            await new Promise((resolve) => setTimeout(resolve, 1500))
+
+            // Set mock auth cookie
+            document.cookie = "auth_token=mock_jwt_token; path=/; max-age=86400; SameSite=Lax"
+
+            // Redirect to Home
+            router.push('/')
+            router.refresh()
         } catch (error) {
             console.error(error)
         } finally {

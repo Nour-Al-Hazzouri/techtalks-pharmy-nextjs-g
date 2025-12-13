@@ -8,6 +8,7 @@ import { PharmacyDetails } from "@/components/features/map/PharmacyDetails"
 import { MOCK_PHARMACIES, Pharmacy } from "@/lib/mock-data"
 import { ChevronRight, ChevronLeft, Search } from "lucide-react"
 import { useMediaQuery } from "@/hooks/use-media-query"
+import { useSearchParams } from "next/navigation"
 import {
     Drawer,
     DrawerContent,
@@ -30,15 +31,25 @@ export function MapPageContainer() {
     const [searchQuery, setSearchQuery] = React.useState("")
     const isDesktop = useMediaQuery("(min-width: 768px)")
     const [snap, setSnap] = React.useState<number | string | null>(0.5)
+    const searchParams = useSearchParams()
 
     React.useEffect(() => {
         // Initial mobile state: Closed to show full map
-        // We check window width directly to avoid waiting for hook update if possible, 
-        // or just rely on effect. 
         if (window.innerWidth < 768) {
             setIsPanelOpen(false)
         }
-    }, [])
+
+        // Handle URL search params
+        const q = searchParams.get('q')
+        if (q) {
+            setSearchQuery(q)
+            setIsPanelOpen(true)
+            // On mobile, if we have a search, open to half.
+            if (window.innerWidth < 768) {
+                setSnap(0.5)
+            }
+        }
+    }, [searchParams])
 
 
     // Filter pharmacies based on search query (checking availability)

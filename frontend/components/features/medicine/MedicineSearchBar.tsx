@@ -61,9 +61,8 @@ export function MedicineSearchBar() {
     const handleSearch = (term: string) => {
         setQuery(term)
         setShowResults(false)
-        // TODO: Navigate to search results page
         console.log("Searching for:", term)
-        // router.push(`/search?q=${term}`)
+        router.push(`/map?q=${encodeURIComponent(term)}`)
     }
 
     return (
