@@ -13,10 +13,26 @@ import { DashboardStatsCard } from "./DashboardStatsCard"
 import { QuickActionCard } from "./QuickActionCard"
 import { RecentActivityList, type ActivityItem } from "./RecentActivityList"
 import { MOCK_DASHBOARD_STATS, MOCK_RECENT_ACTIVITY } from "@/lib/mock-data"
+import {
+    getStoredRecentActivity,
+    hydrateRelativeTimestamps,
+} from "@/lib/pharmacy-recent-activity"
 
 export function DashboardContent() {
     const stats = MOCK_DASHBOARD_STATS
-    const activities = MOCK_RECENT_ACTIVITY
+    const [activities, setActivities] = React.useState<ActivityItem[]>(() =>
+        MOCK_RECENT_ACTIVITY
+    )
+
+    React.useEffect(() => {
+        const stored = getStoredRecentActivity()
+        if (stored.length > 0) {
+            setActivities(hydrateRelativeTimestamps(stored))
+            return
+        }
+
+        setActivities(MOCK_RECENT_ACTIVITY)
+    }, [])
 
     return (
         <div className="flex-1 bg-gray-50 px-4 py-4 pt-20 pb-24 md:p-6 md:pt-6 md:pb-6 overflow-auto">

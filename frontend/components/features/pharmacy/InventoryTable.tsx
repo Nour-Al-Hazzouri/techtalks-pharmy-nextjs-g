@@ -3,6 +3,7 @@
 import * as React from "react"
 import { Plus, Search, Save, Trash2, XCircle } from "lucide-react"
 import { MOCK_MEDICINES, type PharmacyInventoryItem } from "@/lib/mock-data"
+import { addRecentActivityEntries } from "@/lib/pharmacy-recent-activity"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -27,6 +28,13 @@ function statusLabel(item: { available: boolean; quantity: number }) {
     if (item.quantity <= 0) return "Out of stock"
     if (item.quantity <= 5) return "Low stock"
     return "In stock"
+}
+
+function statusKey(item: { available: boolean; quantity: number }) {
+    if (!item.available) return "out_of_stock" as const
+    if (item.quantity <= 0) return "out_of_stock" as const
+    if (item.quantity <= 5) return "low_stock" as const
+    return "in_stock" as const
 }
 
 function statusClasses(label: string) {
@@ -162,6 +170,54 @@ export function InventoryTable({ items, onItemsChange }: InventoryTableProps) {
     const handleSave = () => {
         const now = new Date().toISOString()
 
+        const ids = Object.keys(pending)
+        if (ids.length > 0) {
+            const entries = ids
+                .map((id) => {
+                    const initial = items.find((i) => i.id === id)
+                    const update = pending[id]
+                    if (!initial || !update) return null
+
+                    const next = {
+                        available: update.available,
+                        quantity: normalizeQuantity(update.quantity),
+                    }
+
+                    const label = statusLabel(next)
+                    const status = statusKey(next)
+
+                    let action = "Updated"
+                    if (!next.available) action = "Marked as Unavailable"
+                    else if (label === "Out of stock") action = "Updated to Out of Stock"
+                    else if (label === "Low stock") action = "Marked as Low Stock"
+                    else if (label === "In stock") action = "Updated to In Stock"
+
+                    const changedAvailability = initial.available !== next.available
+                    const changedQuantity = initial.quantity !== next.quantity
+
+                    if (!changedAvailability && changedQuantity) {
+                        action = `Updated quantity to ${next.quantity}`
+                    }
+
+                    return {
+                        medicineName: initial.name,
+                        action,
+                        status,
+                    }
+                })
+                .filter(
+                    (
+                        entry
+                    ): entry is {
+                        medicineName: string
+                        action: string
+                        status: "in_stock" | "low_stock" | "out_of_stock"
+                    } => entry !== null
+                )
+
+            if (entries.length > 0) addRecentActivityEntries(entries, now)
+        }
+
         onItemsChange((prev) =>
             prev.map((item) => {
                 const update = pending[item.id]
@@ -175,7 +231,6 @@ export function InventoryTable({ items, onItemsChange }: InventoryTableProps) {
             })
         )
 
-        const ids = Object.keys(pending)
         console.log("[pharmacy][inventory] save", {
             updates: ids.map((id) => ({ id, ...pending[id] })),
         })
