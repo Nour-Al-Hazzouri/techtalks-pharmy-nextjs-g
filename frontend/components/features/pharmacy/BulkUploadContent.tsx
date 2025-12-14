@@ -215,7 +215,7 @@ export function BulkUploadContent() {
     const canUpload = status !== "uploading" && file !== null
 
     return (
-        <div className="flex-1 bg-gray-50 p-6 overflow-auto">
+        <div className="flex-1 bg-gray-50 px-4 py-4 pt-20 pb-24 md:p-6 md:pt-6 md:pb-6 overflow-auto">
             <div className="mb-6">
                 <h1 className="text-2xl font-bold text-gray-900">CSV Bulk Upload</h1>
                 <p className="text-gray-500">Upload inventory data from your system</p>
@@ -229,7 +229,7 @@ export function BulkUploadContent() {
                                 Download Template
                             </CardTitle>
                         </CardHeader>
-                        <CardContent className="flex items-center justify-between gap-4">
+                        <CardContent className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                             <div className="flex items-center gap-3 text-sm text-gray-600">
                                 <div className="h-10 w-10 rounded-full bg-green-50 flex items-center justify-center">
                                     <Download className="h-5 w-5 text-green-600" />
@@ -246,6 +246,7 @@ export function BulkUploadContent() {
                                 type="button"
                                 variant="outline"
                                 onClick={downloadTemplate}
+                                className="w-full sm:w-auto"
                             >
                                 <Download className="h-4 w-4" />
                                 Download CSV Template
@@ -300,7 +301,7 @@ export function BulkUploadContent() {
                             </div>
 
                             {file && (
-                                <div className="flex items-center justify-between gap-4 rounded-xl border border-gray-100 bg-white p-4">
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 rounded-xl border border-gray-100 bg-white p-4">
                                     <div className="flex items-center gap-3">
                                         <FileText className="h-5 w-5 text-gray-500" />
                                         <div>
@@ -318,6 +319,7 @@ export function BulkUploadContent() {
                                         variant="outline"
                                         onClick={reset}
                                         disabled={status === "uploading"}
+                                        className="w-full sm:w-auto"
                                     >
                                         <XCircle className="h-4 w-4" />
                                         Remove
@@ -359,12 +361,13 @@ export function BulkUploadContent() {
                                 </div>
                             )}
 
-                            <div className="flex items-center justify-end gap-2">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-2">
                                 <Button
                                     type="button"
                                     variant="outline"
                                     onClick={reset}
                                     disabled={status === "uploading" && progress > 0}
+                                    className="w-full sm:w-auto"
                                 >
                                     Reset
                                 </Button>
@@ -372,6 +375,7 @@ export function BulkUploadContent() {
                                     type="button"
                                     onClick={startUpload}
                                     disabled={!canUpload}
+                                    className="w-full sm:w-auto"
                                 >
                                     Upload CSV
                                 </Button>

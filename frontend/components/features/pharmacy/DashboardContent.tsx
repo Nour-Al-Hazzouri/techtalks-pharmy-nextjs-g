@@ -19,9 +19,9 @@ export function DashboardContent() {
     const activities = MOCK_RECENT_ACTIVITY
 
     return (
-        <div className="flex-1 bg-gray-50 p-6 overflow-auto">
+        <div className="flex-1 bg-gray-50 px-4 py-4 pt-20 pb-24 md:p-6 md:pt-6 md:pb-6 overflow-auto">
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                 <DashboardStatsCard
                     title="Total Medicines"
                     value={stats.totalMedicines}

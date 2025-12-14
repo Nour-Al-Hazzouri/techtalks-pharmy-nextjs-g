@@ -14,7 +14,7 @@ export function InventoryContent() {
         .length
 
     return (
-        <div className="flex-1 bg-gray-50 p-6 overflow-auto">
+        <div className="flex-1 bg-gray-50 px-4 py-4 pt-20 pb-24 md:p-6 md:pt-6 md:pb-6 overflow-auto">
             <div className="mb-6">
                 <h1 className="text-2xl font-bold text-gray-900">Stock Management</h1>
                 <p className="text-gray-500">
@@ -22,7 +22,7 @@ export function InventoryContent() {
                 </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                 <div className="bg-white rounded-xl border border-gray-100 p-4">
                     <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
                         Total Medicines

@@ -310,7 +310,98 @@ export function InventoryTable({ items, onItemsChange }: InventoryTableProps) {
                 </div>
             </div>
 
-            <div className="overflow-auto">
+            {/* Mobile list */}
+            <div className="md:hidden p-4 space-y-3">
+                {filtered.map((item) => {
+                    const effective = getEffective(item)
+                    const label = statusLabel(effective)
+
+                    return (
+                        <div
+                            key={item.id}
+                            className="rounded-xl border border-gray-100 bg-white p-4"
+                        >
+                            <div className="flex items-start justify-between gap-3">
+                                <div className="min-w-0">
+                                    <div className="text-sm font-semibold text-gray-900 truncate">
+                                        {item.name}
+                                    </div>
+                                    <div className="mt-2">
+                                        <span
+                                            className={
+                                                "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium " +
+                                                statusClasses(label)
+                                            }
+                                        >
+                                            {label}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                    <Checkbox
+                                        checked={effective.available}
+                                        onCheckedChange={(v) =>
+                                            handleToggleAvailable(item.id, Boolean(v))
+                                        }
+                                    />
+                                    <span className="text-xs text-gray-600">
+                                        {effective.available ? "Yes" : "No"}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="mt-3 grid grid-cols-2 gap-3">
+                                <div>
+                                    <div className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
+                                        Quantity
+                                    </div>
+                                    <Input
+                                        type="number"
+                                        min={0}
+                                        value={String(effective.quantity)}
+                                        onChange={(e) =>
+                                            handleQuantityChange(item.id, e.target.value)
+                                        }
+                                        disabled={!effective.available}
+                                        className="mt-1"
+                                    />
+                                </div>
+
+                                <div>
+                                    <div className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">
+                                        Last updated
+                                    </div>
+                                    <div className="mt-2 text-xs text-gray-500 break-words">
+                                        {effective.updatedAt}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="mt-4">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => handleRemove(item.id)}
+                                    className="w-full"
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                    Remove
+                                </Button>
+                            </div>
+                        </div>
+                    )
+                })}
+
+                {filtered.length === 0 && (
+                    <div className="rounded-xl border border-gray-100 bg-white p-8 text-center text-sm text-gray-500">
+                        No medicines match your search.
+                    </div>
+                )}
+            </div>
+
+            {/* Desktop table */}
+            <div className="hidden md:block overflow-auto">
                 <table className="min-w-full text-sm">
                     <thead className="bg-gray-50 text-gray-500">
                         <tr>

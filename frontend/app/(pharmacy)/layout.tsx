@@ -10,7 +10,7 @@ export default function PharmacyLayout({
     const pharmacy = MOCK_CURRENT_PHARMACY
 
     return (
-        <div className="flex h-screen bg-gray-50">
+        <div className="flex min-h-dvh bg-gray-50">
             <PharmacySidebar
                 pharmacyName={pharmacy.name}
                 pharmacyLocation={pharmacy.location}
