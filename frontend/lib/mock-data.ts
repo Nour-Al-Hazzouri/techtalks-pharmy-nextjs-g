@@ -119,16 +119,23 @@ export const MOCK_MEDICINES = [
     "Panadol Cold & Flu",
     "Panadol Night",
     "Paracetamol",
+    "Paracetamol 500mg",
     "Insulin",
     "Insulin Aspart",
+    "Insulin Apidra",
+    "Insulin Lispro",
     "Ibuprofen",
     "Aspirin",
     "Amoxicillin",
     "Augmentin",
     "Vitamin C",
     "Vitamin D",
+    "Vitamin B12",
     "Zinc",
     "Magnesium",
+    "Omeprazole",
+    "Metformin",
+    "Atorvastatin",
 ]
 
 export const POPULAR_SEARCHES = ["Insulin", "Paracetamol", "Aspirin", "Amoxicillin"]

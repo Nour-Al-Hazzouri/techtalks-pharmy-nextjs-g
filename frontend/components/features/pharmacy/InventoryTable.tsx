@@ -1,14 +1,15 @@
 "use client"
 
 import * as React from "react"
-import { Search, Save, XCircle } from "lucide-react"
-import type { PharmacyInventoryItem } from "@/lib/mock-data"
+import { Plus, Search, Save, Trash2, XCircle } from "lucide-react"
+import { MOCK_MEDICINES, type PharmacyInventoryItem } from "@/lib/mock-data"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 
 type InventoryTableProps = {
-    initialItems: PharmacyInventoryItem[]
+    items: PharmacyInventoryItem[]
+    onItemsChange: React.Dispatch<React.SetStateAction<PharmacyInventoryItem[]>>
 }
 
 type PendingUpdate = {
@@ -41,12 +42,16 @@ function statusClasses(label: string) {
     }
 }
 
-export function InventoryTable({ initialItems }: InventoryTableProps) {
+function normalizeName(value: string) {
+    return value.trim().toLowerCase()
+}
+
+export function InventoryTable({ items, onItemsChange }: InventoryTableProps) {
     const [query, setQuery] = React.useState("")
 
-    const [items, setItems] = React.useState<PharmacyInventoryItem[]>(
-        () => initialItems
-    )
+    const [addQuery, setAddQuery] = React.useState("")
+    const [addSelected, setAddSelected] = React.useState<string | null>(null)
+    const [showAddResults, setShowAddResults] = React.useState(false)
 
     const [pending, setPending] = React.useState<Record<string, PendingUpdate>>(
         {}
@@ -57,6 +62,31 @@ export function InventoryTable({ initialItems }: InventoryTableProps) {
         if (!q) return items
         return items.filter((i) => i.name.toLowerCase().includes(q))
     }, [items, query])
+
+    const addResults = React.useMemo(() => {
+        const q = normalizeName(addQuery)
+        if (!q) return []
+
+        const existing = new Set(items.map((i) => normalizeName(i.name)))
+
+        return MOCK_MEDICINES.filter((m) => {
+            const key = normalizeName(m)
+            return key.includes(q) && !existing.has(key)
+        }).slice(0, 8)
+    }, [addQuery, items])
+
+    const canAdd = React.useMemo(() => {
+        const term = addSelected ?? addQuery
+        const normalized = normalizeName(term)
+        if (!normalized) return false
+
+        const match = MOCK_MEDICINES.find(
+            (m) => normalizeName(m) === normalized
+        )
+        if (!match) return false
+
+        return !items.some((i) => normalizeName(i.name) === normalizeName(match))
+    }, [addQuery, addSelected, items])
 
     const pendingCount = Object.keys(pending).length
 
@@ -132,7 +162,7 @@ export function InventoryTable({ initialItems }: InventoryTableProps) {
     const handleSave = () => {
         const now = new Date().toISOString()
 
-        setItems((prev) =>
+        onItemsChange((prev) =>
             prev.map((item) => {
                 const update = pending[item.id]
                 if (!update) return item
@@ -153,16 +183,109 @@ export function InventoryTable({ initialItems }: InventoryTableProps) {
         setPending({})
     }
 
+    const handleAdd = () => {
+        const term = addSelected ?? addQuery.trim()
+        if (!term) return
+
+        const match = MOCK_MEDICINES.find(
+            (m) => normalizeName(m) === normalizeName(term)
+        )
+        if (!match) return
+
+        const exists = items.some((i) => normalizeName(i.name) === normalizeName(match))
+        if (exists) return
+
+        const now = new Date().toISOString()
+
+        onItemsChange((prev) => [
+            ...prev,
+            {
+                id: `med-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+                name: match,
+                available: true,
+                quantity: 0,
+                updatedAt: now,
+            },
+        ])
+
+        setAddQuery("")
+        setAddSelected(null)
+        setShowAddResults(false)
+    }
+
+    const handleRemove = (id: string) => {
+        const item = items.find((i) => i.id === id)
+        if (!item) return
+
+        const ok = window.confirm(`Remove ${item.name} from inventory?`)
+        if (!ok) return
+
+        onItemsChange((prev) => prev.filter((i) => i.id !== id))
+        setPending((prev) => {
+            const { [id]: _, ...rest } = prev
+            return rest
+        })
+    }
+
     return (
         <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
             <div className="p-4 border-b border-gray-100 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-2 w-full sm:max-w-md">
-                    <Search className="h-4 w-4 text-gray-400" />
-                    <Input
-                        value={query}
-                        onChange={(e) => setQuery(e.target.value)}
-                        placeholder="Search medicines..."
-                    />
+                <div className="flex flex-col gap-2 w-full sm:max-w-md">
+                    <div className="flex items-center gap-2">
+                        <Search className="h-4 w-4 text-gray-400" />
+                        <Input
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
+                            placeholder="Search medicines..."
+                        />
+                    </div>
+
+                    <div className="relative flex items-center gap-2">
+                        <Plus className="h-4 w-4 text-gray-400" />
+                        <Input
+                            value={addQuery}
+                            onChange={(e) => {
+                                setAddQuery(e.target.value)
+                                setAddSelected(null)
+                                setShowAddResults(true)
+                            }}
+                            onFocus={() => {
+                                if (addQuery.trim().length > 0) setShowAddResults(true)
+                            }}
+                            onBlur={() => {
+                                setTimeout(() => setShowAddResults(false), 150)
+                            }}
+                            placeholder="Add medicine from list..."
+                        />
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={handleAdd}
+                            disabled={!canAdd}
+                        >
+                            Add
+                        </Button>
+
+                        {showAddResults && addResults.length > 0 && (
+                            <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-lg border border-gray-100 z-50 max-h-56 overflow-y-auto">
+                                {addResults.map((result) => (
+                                    <button
+                                        key={result}
+                                        type="button"
+                                        className="w-full text-left px-4 py-3 hover:bg-gray-50 text-gray-700 text-sm transition-colors border-b border-gray-50 last:border-0"
+                                        onMouseDown={(e) => e.preventDefault()}
+                                        onClick={() => {
+                                            setAddSelected(result)
+                                            setAddQuery(result)
+                                            setShowAddResults(false)
+                                        }}
+                                    >
+                                        {result}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 <div className="flex items-center gap-2 justify-end">
@@ -205,6 +328,9 @@ export function InventoryTable({ initialItems }: InventoryTableProps) {
                             </th>
                             <th className="text-left font-semibold px-4 py-3">
                                 Last updated
+                            </th>
+                            <th className="text-right font-semibold px-4 py-3">
+                                Actions
                             </th>
                         </tr>
                     </thead>
@@ -267,6 +393,16 @@ export function InventoryTable({ initialItems }: InventoryTableProps) {
                                     <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
                                         {effective.updatedAt}
                                     </td>
+                                    <td className="px-4 py-3 text-right whitespace-nowrap">
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={() => handleRemove(item.id)}
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                            Remove
+                                        </Button>
+                                    </td>
                                 </tr>
                             )
                         })}
@@ -274,7 +410,7 @@ export function InventoryTable({ initialItems }: InventoryTableProps) {
                             <tr className="border-t border-gray-100">
                                 <td
                                     className="px-4 py-10 text-center text-gray-500"
-                                    colSpan={5}
+                                    colSpan={6}
                                 >
                                     No medicines match your search.
                                 </td>

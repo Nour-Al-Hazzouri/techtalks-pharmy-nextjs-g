@@ -1,8 +1,11 @@
+"use client"
+
+import * as React from "react"
 import { MOCK_PHARMACY_INVENTORY } from "@/lib/mock-data"
 import { InventoryTable } from "@/components/features/pharmacy/InventoryTable"
 
 export function InventoryContent() {
-    const items = MOCK_PHARMACY_INVENTORY
+    const [items, setItems] = React.useState(() => MOCK_PHARMACY_INVENTORY)
 
     const total = items.length
     const available = items.filter((i) => i.available).length
@@ -46,7 +49,7 @@ export function InventoryContent() {
                 </div>
             </div>
 
-            <InventoryTable initialItems={items} />
+            <InventoryTable items={items} onItemsChange={setItems} />
         </div>
     )
 }
