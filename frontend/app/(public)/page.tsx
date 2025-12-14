@@ -1,11 +1,9 @@
-import { MedicineSearchHome } from "@/components/features/medicine/MedicineSearchHome"
-import { Metadata } from "next"
+import { redirect } from "next/navigation"
 
-export const metadata: Metadata = {
-    title: "Pharmy - Find Medicine Nearby",
-    description: "Search for medicine availability at pharmacies near you.",
-}
-
+/**
+ * Home page redirects to login by default
+ * Users need to authenticate before accessing the app
+ */
 export default function HomePage() {
-    return <MedicineSearchHome />
+    redirect("/login")
 }

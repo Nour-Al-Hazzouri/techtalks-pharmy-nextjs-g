@@ -133,3 +133,84 @@ export const MOCK_MEDICINES = [
 
 export const POPULAR_SEARCHES = ["Insulin", "Paracetamol", "Aspirin", "Amoxicillin"]
 
+// Dashboard Mock Data
+export const MOCK_DASHBOARD_STATS = {
+    totalMedicines: 28,
+    inStock: 22,
+    lowStock: 4,
+    outOfStock: 2,
+}
+
+export interface RecentActivity {
+    id: string
+    medicineName: string
+    action: string
+    timestamp: string
+    status: "in_stock" | "low_stock" | "out_of_stock"
+}
+
+export const MOCK_RECENT_ACTIVITY: RecentActivity[] = [
+    {
+        id: "1",
+        medicineName: "Insulin Apidra",
+        action: "Updated to In Stock",
+        timestamp: "2 mins ago",
+        status: "low_stock",
+    },
+    {
+        id: "2",
+        medicineName: "Paracetamol 500mg",
+        action: "Updated to In Stock",
+        timestamp: "15 mins ago",
+        status: "low_stock",
+    },
+    {
+        id: "3",
+        medicineName: "Amoxicillin",
+        action: "Marked as Low Stock",
+        timestamp: "1 hour ago",
+        status: "low_stock",
+    },
+]
+
+// Current Pharmacy Info (for logged-in pharmacy user)
+export const MOCK_CURRENT_PHARMACY = {
+    id: "1",
+    name: "ASTER PHARMACY",
+    location: "Dubai, International City, T-8601",
+    email: "aster.downtown@pharmacy.ae",
+    phone: "+971 4 123 4567",
+    licenseNumber: "PH-2024-001",
+    verified: true,
+}
+
+// Mock User Accounts for Testing
+export interface MockUser {
+    email: string
+    password: string
+    role: "patient" | "pharmacy" | "admin"
+    name: string
+}
+
+export const MOCK_USERS: MockUser[] = [
+    {
+        email: "patient@test.com",
+        password: "patient123",
+        role: "patient",
+        name: "Test Patient",
+    },
+    {
+        email: "pharmacy@test.com",
+        password: "pharmacy123",
+        role: "pharmacy",
+        name: "Aster Pharmacy",
+    },
+    {
+        email: "admin@test.com",
+        password: "admin123",
+        role: "admin",
+        name: "Admin User",
+    },
+]
+
+
