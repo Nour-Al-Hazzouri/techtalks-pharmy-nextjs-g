@@ -63,7 +63,9 @@ export function LoginForm() {
             document.cookie = `user_role=${user.role}; path=/; max-age=86400; SameSite=Lax`
 
             // Redirect based on role
-            if (user.role === 'pharmacy') {
+            if (user.role === 'admin') {
+                router.push('/admin')
+            } else if (user.role === 'pharmacy') {
                 router.push('/dashboard')
             } else {
                 router.push('/')
@@ -93,6 +95,7 @@ export function LoginForm() {
                 <ul className="text-blue-700 space-y-1 text-xs">
                     <li><strong>Patient:</strong> patient@test.com / patient123</li>
                     <li><strong>Pharmacy:</strong> pharmacy@test.com / pharmacy123</li>
+                    <li><strong>Admin:</strong> admin@test.com / admin123</li>
                 </ul>
             </div>
 
