@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Loader2, Mail, Lock, Eye, EyeOff } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { z } from "zod"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -17,12 +18,20 @@ import {
     FormLabel,
     FormMessage,
 } from "@/components/ui/form"
-import { loginSchema, LoginValues } from "@/lib/validations/auth"
+import { MOCK_USERS } from "@/lib/mock-data"
+
+const loginSchema = z.object({
+    email: z.string().email({ message: "Invalid email address" }),
+    password: z.string().min(1, { message: "Password is required" }),
+})
+
+type LoginValues = z.infer<typeof loginSchema>
 
 export function LoginForm() {
     const router = useRouter()
     const [isPending, setIsPending] = React.useState(false)
     const [showPassword, setShowPassword] = React.useState(false)
+    const [error, setError] = React.useState<string | null>(null)
 
     const form = useForm<LoginValues>({
         resolver: zodResolver(loginSchema),
@@ -34,19 +43,35 @@ export function LoginForm() {
 
     async function onSubmit(data: LoginValues) {
         setIsPending(true)
+        setError(null)
+
         try {
-            // TODO: Call API endpoint
-            console.log(data)
-            await new Promise((resolve) => setTimeout(resolve, 1500)) // Simulate API
+            await new Promise((resolve) => setTimeout(resolve, 800))
 
-            // Set mock auth cookie
+            const user = MOCK_USERS.find(
+                (u) => u.email === data.email && u.password === data.password
+            )
+
+            if (!user) {
+                setError("Invalid email or password")
+                setIsPending(false)
+                return
+            }
+
+            // Set auth cookies
             document.cookie = "auth_token=mock_jwt_token; path=/; max-age=86400; SameSite=Lax"
+            document.cookie = `user_role=${user.role}; path=/; max-age=86400; SameSite=Lax`
 
-            // Redirect to Home (Search Page)
-            router.push('/')
-            router.refresh() // Refresh to update middleware state
-        } catch (error) {
-            console.error(error)
+            // Redirect based on role
+            if (user.role === 'pharmacy') {
+                router.push('/dashboard')
+            } else {
+                router.push('/')
+            }
+            router.refresh()
+        } catch (err) {
+            console.error(err)
+            setError("An error occurred. Please try again.")
         } finally {
             setIsPending(false)
         }
@@ -59,12 +84,26 @@ export function LoginForm() {
                     <h1 className="text-3xl font-bold mb-2">WELCOME BACK</h1>
                     <p className="opacity-90">Sign in to continue</p>
                 </div>
-                {/* Decorative circle */}
                 <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
+            </div>
+
+            {/* Test Credentials Info */}
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm">
+                <p className="font-semibold text-blue-800 mb-2">Test Accounts:</p>
+                <ul className="text-blue-700 space-y-1 text-xs">
+                    <li><strong>Patient:</strong> patient@test.com / patient123</li>
+                    <li><strong>Pharmacy:</strong> pharmacy@test.com / pharmacy123</li>
+                </ul>
             </div>
 
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                    {error && (
+                        <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-red-700 text-sm">
+                            {error}
+                        </div>
+                    )}
+
                     <FormField
                         control={form.control}
                         name="email"

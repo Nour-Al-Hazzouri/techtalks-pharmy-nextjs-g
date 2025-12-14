@@ -1,7 +1,9 @@
 "use client"
 
-import { MapPin, X } from "lucide-react"
+import { MapPin, X, LogOut } from "lucide-react"
+import { useRouter } from "next/navigation"
 import { ExpandableSearchBar } from "./ExpandableSearchBar"
+import { Button } from "@/components/ui/button"
 
 interface MapHeaderProps {
     searchQuery: string
@@ -10,6 +12,18 @@ interface MapHeaderProps {
 }
 
 export function MapHeader({ searchQuery, onSearch, onClear }: MapHeaderProps) {
+    const router = useRouter()
+
+    const handleLogout = () => {
+        // Clear auth cookies
+        document.cookie = "auth_token=; path=/; max-age=0"
+        document.cookie = "user_role=; path=/; max-age=0"
+
+        // Redirect to login
+        router.push("/login")
+        router.refresh()
+    }
+
     return (
         <header className="w-full h-16 bg-white border-b border-gray-100 flex items-center justify-between px-3 sm:px-6 shrink-0 relative z-20 shadow-sm">
             <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 mr-2">
@@ -42,8 +56,17 @@ export function MapHeader({ searchQuery, onSearch, onClear }: MapHeaderProps) {
                     </div>
                 )}
             </div>
-            <div className="shrink-0">
+            <div className="flex items-center gap-2 shrink-0">
                 <ExpandableSearchBar onSearch={onSearch} />
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleLogout}
+                    className="text-gray-600 hover:text-gray-900"
+                >
+                    <LogOut className="h-4 w-4" />
+                    <span className="hidden sm:inline ml-2">Logout</span>
+                </Button>
             </div>
         </header>
     )
