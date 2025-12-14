@@ -20,7 +20,6 @@ import {
 } from "@/components/ui/form"
 import { MOCK_USERS } from "@/lib/mock-data"
 
-// Login schema
 const loginSchema = z.object({
     email: z.string().email({ message: "Invalid email address" }),
     password: z.string().min(1, { message: "Password is required" }),
@@ -47,10 +46,8 @@ export function LoginForm() {
         setError(null)
 
         try {
-            // Simulate API delay
             await new Promise((resolve) => setTimeout(resolve, 800))
 
-            // Find user in mock accounts
             const user = MOCK_USERS.find(
                 (u) => u.email === data.email && u.password === data.password
             )
@@ -61,15 +58,17 @@ export function LoginForm() {
                 return
             }
 
-            // Redirect based on role (no cookies - session is not persisted)
+            // Set auth cookies
+            document.cookie = "auth_token=mock_jwt_token; path=/; max-age=86400; SameSite=Lax"
+            document.cookie = `user_role=${user.role}; path=/; max-age=86400; SameSite=Lax`
+
+            // Redirect based on role
             if (user.role === 'pharmacy') {
                 router.push('/dashboard')
-            } else if (user.role === 'admin') {
-                router.push('/admin')
             } else {
-                // Patient goes to map/search page
-                router.push('/map')
+                router.push('/')
             }
+            router.refresh()
         } catch (err) {
             console.error(err)
             setError("An error occurred. Please try again.")
@@ -85,7 +84,6 @@ export function LoginForm() {
                     <h1 className="text-3xl font-bold mb-2">WELCOME BACK</h1>
                     <p className="opacity-90">Sign in to continue</p>
                 </div>
-                {/* Decorative circle */}
                 <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
             </div>
 

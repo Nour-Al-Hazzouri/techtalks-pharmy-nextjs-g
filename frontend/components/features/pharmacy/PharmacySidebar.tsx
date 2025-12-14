@@ -43,8 +43,13 @@ export function PharmacySidebar({
     }, [])
 
     const handleLogout = () => {
-        // Simply redirect to login page (no cookies to clear)
+        // Clear auth cookies
+        document.cookie = "auth_token=; path=/; max-age=0"
+        document.cookie = "user_role=; path=/; max-age=0"
+
+        // Redirect to login
         router.push("/login")
+        router.refresh()
     }
 
     return (

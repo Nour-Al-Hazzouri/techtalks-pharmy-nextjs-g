@@ -3,18 +3,54 @@ import type { NextRequest } from 'next/server'
 
 /**
  * Next.js 16 Proxy Function
- * 
- * For now, this is a pass-through proxy. Authentication will be
- * handled entirely in the components using a session context.
- * 
- * Role-based access control will be enforced when backend is connected.
+ * Handles authentication and role-based access control
  */
 export function proxy(request: NextRequest) {
-    // Pass through all requests - auth is handled by session context
+    const token = request.cookies.get('auth_token')?.value
+    const userRole = request.cookies.get('user_role')?.value
+    const { pathname } = request.nextUrl
+
+    // Public paths that don't require authentication
+    const publicPaths = ['/login', '/register']
+    const isPublicPath = publicPaths.some(path => pathname.startsWith(path))
+
+    // Pharmacy-only routes
+    const pharmacyRoutes = ['/dashboard', '/inventory', '/bulk-upload']
+    const isPharmacyRoute = pharmacyRoutes.some(route => pathname.startsWith(route))
+
+    // If on a public path (login/register)
+    if (isPublicPath) {
+        // If already authenticated, redirect to appropriate page
+        if (token) {
+            if (userRole === 'pharmacy') {
+                return NextResponse.redirect(new URL('/dashboard', request.url))
+            }
+            return NextResponse.redirect(new URL('/', request.url))
+        }
+        return NextResponse.next()
+    }
+
+    // Not authenticated - redirect to login
+    if (!token) {
+        return NextResponse.redirect(new URL('/login', request.url))
+    }
+
+    // Pharmacy routes - only pharmacy users can access
+    if (isPharmacyRoute) {
+        if (userRole !== 'pharmacy') {
+            return NextResponse.redirect(new URL('/', request.url))
+        }
+    }
+
+    // Regular users trying to access patient-only routes (/, /map, etc.)
+    // Pharmacy users shouldn't access patient pages
+    if (!isPharmacyRoute && userRole === 'pharmacy') {
+        return NextResponse.redirect(new URL('/dashboard', request.url))
+    }
+
     return NextResponse.next()
 }
 
-// Configure which paths the proxy runs on
 export const config = {
     matcher: [
         '/((?!api|_next/static|_next/image|favicon.ico|icons|images).*)',
