@@ -213,4 +213,62 @@ export const MOCK_USERS: MockUser[] = [
     },
 ]
 
+export interface PharmacyInventoryItem {
+    id: string
+    name: string
+    available: boolean
+    quantity: number
+    updatedAt: string
+}
 
+export const MOCK_PHARMACY_INVENTORY: PharmacyInventoryItem[] = [
+    {
+        id: "med-1",
+        name: "Insulin Apidra",
+        available: true,
+        quantity: 12,
+        updatedAt: "2025-12-14T06:55:00+02:00",
+    },
+    {
+        id: "med-2",
+        name: "Paracetamol 500mg",
+        available: true,
+        quantity: 48,
+        updatedAt: "2025-12-14T06:50:00+02:00",
+    },
+    {
+        id: "med-3",
+        name: "Amoxicillin",
+        available: true,
+        quantity: 4,
+        updatedAt: "2025-12-14T06:40:00+02:00",
+    },
+    {
+        id: "med-4",
+        name: "Panadol Extra",
+        available: true,
+        quantity: 0,
+        updatedAt: "2025-12-14T06:35:00+02:00",
+    },
+    {
+        id: "med-5",
+        name: "Ibuprofen",
+        available: false,
+        quantity: 0,
+        updatedAt: "2025-12-14T06:20:00+02:00",
+    },
+    {
+        id: "med-6",
+        name: "Vitamin C",
+        available: true,
+        quantity: 7,
+        updatedAt: "2025-12-14T06:15:00+02:00",
+    },
+    {
+        id: "med-7",
+        name: "Aspirin",
+        available: true,
+        quantity: 19,
+        updatedAt: "2025-12-14T06:10:00+02:00",
+    },
+]
