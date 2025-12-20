@@ -60,10 +60,11 @@ Route::prefix('v1')->group(function () {
              Route::put('admin/pharmacies/{id}/approve', [PharmacyController::class, 'approve']);
              Route::put('admin/pharmacies/{id}/reject', [PharmacyController::class, 'reject']);
              
+             Route::get('admin/reports/statistics', [ReportController::class, 'statistics']);
              Route::get('admin/reports', [ReportController::class, 'index']);
              Route::get('admin/reports/{id}', [ReportController::class, 'show']);
              Route::put('admin/reports/{id}/status', [ReportController::class, 'updateStatus']);
-             Route::get('admin/reports/statistics', [ReportController::class, 'statistics']);
+             
         });
     });
 });
