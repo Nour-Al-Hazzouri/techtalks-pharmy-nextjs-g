@@ -85,4 +85,61 @@ class PharmacyService
             'average_rating' => $pharmacy->rating
         ];
     }
+
+    // Documents
+    public function uploadDocument(Pharmacy $pharmacy, array $data, $file)
+    {
+        $path = $file->store('documents/' . $pharmacy->id, 'public');
+        
+        return $pharmacy->documents()->create([
+            'file_path' => $path,
+            'doc_type' => $data['doc_type']
+        ]);
+    }
+
+    public function getDocuments($pharmacyId)
+    {
+        return \App\Models\PharmacyDocument::where('pharmacy_id', $pharmacyId)->get();
+    }
+
+    public function updateDocument(Pharmacy $pharmacy, $documentId, array $data, $file)
+    {
+        $document = $pharmacy->documents()->findOrFail($documentId);
+        
+        // Delete old file
+        if (\Illuminate\Support\Facades\Storage::disk('public')->exists($document->file_path)) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($document->file_path);
+        }
+
+        // Upload new file
+        $path = $file->store('documents/' . $pharmacy->id, 'public');
+
+        $document->update([
+            'file_path' => $path,
+            'doc_type' => $data['doc_type'] ?? $document->doc_type
+        ]);
+
+        return $document;
+    }
+
+    public function deleteDocument(Pharmacy $pharmacy, $documentId)
+    {
+        $document = $pharmacy->documents()->findOrFail($documentId);
+
+        if (\Illuminate\Support\Facades\Storage::disk('public')->exists($document->file_path)) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($document->file_path);
+        }
+
+        return $document->delete();
+    }
+
+    public function getAllDocuments()
+    {
+        return \App\Models\PharmacyDocument::with('pharmacy:id,name,license_number')->latest()->get();
+    }
+
+    public function getDocument(Pharmacy $pharmacy, $documentId)
+    {
+        return $pharmacy->documents()->findOrFail($documentId);
+    }
 }

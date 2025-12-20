@@ -34,4 +34,23 @@
 
 ### Result
 
-A fully functional Laravel API meeting all strict requirements (JWT, No PostGIS, Specific Architecture) with passing tests.
+## 2025-12-20 Feature Implementation
+
+### 1. Partial Updates (PATCH)
+
+-   **Problem**: `PUT`/`PATCH` requests were enforcing strict requirements on all fields, preventing partial updates.
+-   **Solution**:
+    -   Modified `PharmacyRequest` and `InventoryRequest` to use `sometimes` rule conditionally when method is `PUT` or `PATCH`.
+    -   Updated `MedicineService` and `InventoryRepository` (`updatePivot`) to handle partial attribute arrays safely without nulling missing columns.
+    -   Updated `routes/api.php` to support `PATCH`.
+    -   Verification: `tests/Feature/PartialUpdateTest.php`.
+
+### 2. Pharmacy Documents
+
+-   **Feature**: Pharmacists can upload verification documents; Admins can view them.
+-   **Implementation**:
+    -   **Endpoint**: `POST /pharmacy/documents` (Pharmacist), `GET /admin/pharmacies/{id}/documents` (Admin).
+    -   **Pharmacist Management**: Added `GET /pharmacy/documents` (View), `POST /pharmacy/documents/{id}` (Update/Replace), `DELETE /pharmacy/documents/{id}` (Remove).
+    -   **Request**: Created `PharmacyDocumentRequest` (PDF/Image, max 5MB).
+    -   **Service**: Added `uploadDocument`, `getDocuments`, `updateDocument`, and `deleteDocument` to `PharmacyService`.
+    -   Verification: `tests/Feature/PharmacyDocumentTest.php`.

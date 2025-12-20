@@ -14,7 +14,7 @@ class PharmacyRequest extends FormRequest
 
     public function rules(): array
     {
-        return [
+        $rules = [
             'name' => 'required|string|max:255',
             'address' => 'required|string',
             'phone' => 'nullable|string',
@@ -22,5 +22,14 @@ class PharmacyRequest extends FormRequest
             'latitude' => 'required|numeric',
             'longitude' => 'required|numeric',
         ];
+
+        if ($this->isMethod('put') || $this->isMethod('patch')) {
+            foreach ($rules as $key => $rule) {
+                // Prepend 'sometimes' to allow partial updates
+                $rules[$key] = 'sometimes|' . $rule;
+            }
+        }
+
+        return $rules;
     }
 }

@@ -13,10 +13,18 @@ class InventoryRequest extends FormRequest
 
     public function rules(): array
     {
-        return [
+        $rules = [
             'medicine_id' => 'required_without:name|exists:medicines,id',
             'quantity' => 'required|integer|min:0',
             'price' => 'required|numeric|min:0',
         ];
+
+        if ($this->isMethod('put') || $this->isMethod('patch')) {
+            foreach ($rules as $key => $rule) {
+                $rules[$key] = 'sometimes|' . $rule;
+            }
+        }
+
+        return $rules;
     }
 }

@@ -66,7 +66,8 @@ class MedicineService
     // Inventory
     public function getInventory(Pharmacy $pharmacy)
     {
-        return $pharmacy->inventory()->with('medicine')->get();
+        // Use medicines() to get Medicine models with pivot data
+        return $pharmacy->medicines()->get();
     }
 
     public function addInventoryItem(Pharmacy $pharmacy, array $data)
@@ -83,12 +84,11 @@ class MedicineService
 
     public function updateInventoryItem(Pharmacy $pharmacy, $id, array $data)
     {
-        // $id here is probably medicine_id from the route /inventory/{id}
-         return $this->inventoryRepo->updateStock($pharmacy, $id, [
-            'quantity' => $data['quantity'],
-            'price' => $data['price'],
-             'available' => $data['quantity'] > 0
-        ]);
+        $attributes = $data;
+        if (isset($data['quantity'])) {
+            $attributes['available'] = $data['quantity'] > 0;
+        }
+        return $this->inventoryRepo->updatePivot($pharmacy, $id, $attributes);
     }
 
     public function deleteInventoryItem(Pharmacy $pharmacy, $id)

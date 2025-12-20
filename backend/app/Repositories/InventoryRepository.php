@@ -20,6 +20,11 @@ class InventoryRepository
         ]);
     }
 
+    public function updatePivot(Pharmacy $pharmacy, $medicineId, array $data)
+    {
+        return $pharmacy->medicines()->updateExistingPivot($medicineId, $data);
+    }
+
     public function removeStock(Pharmacy $pharmacy, $medicineId)
     {
         return $pharmacy->medicines()->detach($medicineId);
