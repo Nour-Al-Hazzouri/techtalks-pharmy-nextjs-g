@@ -21,10 +21,15 @@ class PharmacyController extends Controller
     }
 
     // Public
-    public function index()
+    public function index(Request $request)
     {
         try {
-            $pharmacies = $this->pharmacyService->getAllPharmacies();
+            $filters = [];
+            if ($request->has('verified')) {
+                $filters['verified'] = $request->input('verified');
+            }
+
+            $pharmacies = $this->pharmacyService->getAllPharmacies($filters);
             return $this->successResponse('Pharmacies list', PharmacyResource::collection($pharmacies)->response()->getData(true));
         } catch (\Exception $e) {
             return $this->errorResponse('Failed to retrieve pharmacies: ' . $e->getMessage(), [], 500);

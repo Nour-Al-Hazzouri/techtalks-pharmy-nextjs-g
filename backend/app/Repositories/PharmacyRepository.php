@@ -8,9 +8,20 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class PharmacyRepository
 {
-    public function getAll(): LengthAwarePaginator
+    public function getAll(array $filters = []): LengthAwarePaginator
     {
-        return Pharmacy::where('verification_status', 'verified')->paginate(10);
+        $query = Pharmacy::query();
+
+        if (isset($filters['verified'])) {
+            $isVerified = filter_var($filters['verified'], FILTER_VALIDATE_BOOLEAN);
+            if ($isVerified) {
+                $query->where('verification_status', 'verified');
+            } else {
+                $query->where('verification_status', '!=', 'verified');
+            }
+        }
+
+        return $query->paginate(10);
     }
 
     public function getById($id): ?Pharmacy

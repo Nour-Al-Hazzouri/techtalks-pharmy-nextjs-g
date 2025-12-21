@@ -16,9 +16,9 @@ class PharmacyService
         $this->repo = $repo;
     }
 
-    public function getAllPharmacies()
+    public function getAllPharmacies(array $filters = [])
     {
-        return $this->repo->getAll();
+        return $this->repo->getAll($filters);
     }
 
     public function getPharmacy($id)
