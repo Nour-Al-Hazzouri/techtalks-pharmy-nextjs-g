@@ -83,12 +83,15 @@ class InventoryController extends Controller
             $path = $request->file('file')->getRealPath();
             $data = CsvParser::parse($path);
 
-            // Assuming CSV has medicine_id, quantity, price
-            // OR name, quantity, price -> find medicine by name
+            // CSV now expects: medicine_name, quantity, price
 
             foreach ($data as $row) {
-                 // Basic logic assuming medicine_id is present
-                 if (isset($row['medicine_id'])) {
+                 if (isset($row['medicine_name'])) {
+                     $medicine = $this->medicineService->findOrCreateMedicineByName($row['medicine_name']);
+                     
+                     // Add ID to row data for the service call
+                     $row['medicine_id'] = $medicine->id;
+                     
                      $this->medicineService->addInventoryItem($pharmacy, $row);
                  }
             }
@@ -102,7 +105,7 @@ class InventoryController extends Controller
     public function template()
     {
         // Return a simple CSV content or link
-        return response("medicine_id,quantity,price\n1,100,20.50", 200, [
+        return response("medicine_name,quantity,price\nPanadol,100,20.50", 200, [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => 'attachment; filename="template.csv"',
         ]);
@@ -134,7 +137,6 @@ class InventoryController extends Controller
 
                 // CSV Header
                 fputcsv($file, [
-                    'medicine_id',
                     'medicine_name',
                     'quantity',
                     'price',
@@ -143,7 +145,6 @@ class InventoryController extends Controller
 
                 foreach ($inventory as $item) {
                     fputcsv($file, [
-                        $item->medicine_id,
                         optional($item->medicine)->name, // SAFE ACCESS
                         $item->quantity,
                         $item->price,

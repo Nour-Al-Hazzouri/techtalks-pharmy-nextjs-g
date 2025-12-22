@@ -63,6 +63,19 @@ class MedicineService
         return $results;
     }
 
+    public function findOrCreateMedicineByName($name)
+    {
+        $medicine = $this->medicineRepo->findByName($name);
+        
+        if (!$medicine) {
+            $medicine = Medicine::create([
+                'name' => $name
+            ]);
+        }
+        
+        return $medicine;
+    }
+
     // Inventory
     public function getInventory(Pharmacy $pharmacy)
     {
