@@ -2,12 +2,14 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
+
 use Illuminate\Database\Seeder;
+use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 
 class AdminUserSeeder extends Seeder
 {
+
     /**
      * Seed the admin users.
      */
@@ -34,5 +36,6 @@ class AdminUserSeeder extends Seeder
                 'phone' => '+1987654321',
             ]
         );
+
     }
 }

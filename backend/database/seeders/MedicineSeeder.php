@@ -173,6 +173,7 @@ class MedicineSeeder extends Seeder
                 'category' => $medicine['category'],
                 'description' => $medicine['description'],
                 'created_at' => $now,
+
             ]);
         }
     }
