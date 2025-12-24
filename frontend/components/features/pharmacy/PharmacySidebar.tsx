@@ -4,6 +4,7 @@ import * as React from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
+import { logout } from "@/lib/api/auth"
 import {
     LayoutDashboard,
     Package,
@@ -48,14 +49,21 @@ export function PharmacySidebar({
         setMounted(true)
     }, [])
 
-    const handleLogout = () => {
-        // Clear auth cookies
-        document.cookie = "auth_token=; path=/; max-age=0"
-        document.cookie = "user_role=; path=/; max-age=0"
 
-        // Redirect to login
-        router.push("/login")
-        router.refresh()
+    const handleLogout = async () => {
+        try {
+            await logout()
+        } catch (error) {
+            console.error("Backend logout failed:", error)
+        } finally {
+            // Clear auth cookies
+            document.cookie = "auth_token=; path=/; max-age=0"
+            document.cookie = "user_role=; path=/; max-age=0"
+
+            // Redirect to login
+            router.push("/login")
+            router.refresh()
+        }
     }
 
     return (
