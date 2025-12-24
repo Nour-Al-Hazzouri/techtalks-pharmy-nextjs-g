@@ -18,7 +18,8 @@ import {
     FormLabel,
     FormMessage,
 } from "@/components/ui/form"
-import { MOCK_USERS } from "@/lib/mock-data"
+import { login } from "@/lib/api/auth"
+import { ApiError } from "@/lib/api/config"
 
 const loginSchema = z.object({
     email: z.string().email({ message: "Invalid email address" }),
@@ -46,34 +47,30 @@ export function LoginForm() {
         setError(null)
 
         try {
-            await new Promise((resolve) => setTimeout(resolve, 800))
+            const response = await login(data.email, data.password)
 
-            const user = MOCK_USERS.find(
-                (u) => u.email === data.email && u.password === data.password
-            )
-
-            if (!user) {
-                setError("Invalid email or password")
-                setIsPending(false)
-                return
-            }
+            const { access_token, user } = response.data
 
             // Set auth cookies
-            document.cookie = "auth_token=mock_jwt_token; path=/; max-age=86400; SameSite=Lax"
+            document.cookie = `auth_token=${access_token}; path=/; max-age=86400; SameSite=Lax`
             document.cookie = `user_role=${user.role}; path=/; max-age=86400; SameSite=Lax`
 
             // Redirect based on role
             if (user.role === 'admin') {
                 router.push('/admin')
-            } else if (user.role === 'pharmacy') {
+            } else if (user.role === 'pharmacist') {
                 router.push('/dashboard')
             } else {
                 router.push('/')
             }
             router.refresh()
         } catch (err) {
-            console.error(err)
-            setError("An error occurred. Please try again.")
+            if (err instanceof ApiError) {
+                setError(err.message || "Invalid email or password")
+            } else {
+                console.error(err)
+                setError("An error occurred. Please try again.")
+            }
         } finally {
             setIsPending(false)
         }
@@ -87,16 +84,6 @@ export function LoginForm() {
                     <p className="opacity-90">Sign in to continue</p>
                 </div>
                 <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
-            </div>
-
-            {/* Test Credentials Info */}
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm">
-                <p className="font-semibold text-blue-800 mb-2">Test Accounts:</p>
-                <ul className="text-blue-700 space-y-1 text-xs">
-                    <li><strong>Patient:</strong> patient@test.com / patient123</li>
-                    <li><strong>Pharmacy:</strong> pharmacy@test.com / pharmacy123</li>
-                    <li><strong>Admin:</strong> admin@test.com / admin123</li>
-                </ul>
             </div>
 
             <Form {...form}>
