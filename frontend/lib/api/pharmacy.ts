@@ -58,17 +58,6 @@ export interface PaginatedResponse<T> {
     };
 }
 
-function getAuthToken(): string | null {
-    if (typeof document === 'undefined') return null;
-    const match = document.cookie.match(/auth_token=([^;]+)/);
-    return match ? match[1] : null;
-}
-
-function authHeaders(): HeadersInit {
-    const token = getAuthToken();
-    return token ? { Authorization: `Bearer ${token}` } : {};
-}
-
 /**
  * Register a new pharmacy
  */
@@ -82,27 +71,20 @@ export async function registerPharmacy(data: {
 }): Promise<ApiResponse<PharmacyProfile>> {
     return apiFetch<ApiResponse<PharmacyProfile>>('/pharmacy/register', {
         method: 'POST',
-        headers: authHeaders(),
         body: JSON.stringify(data),
     });
 }
 
 export async function getDashboardStats(): Promise<ApiResponse<DashboardStats>> {
-    return apiFetch<ApiResponse<DashboardStats>>('/pharmacy/dashboard/stats', {
-        headers: authHeaders(),
-    });
+    return apiFetch<ApiResponse<DashboardStats>>('/pharmacy/dashboard/stats');
 }
 
 export async function getPharmacyProfile(): Promise<ApiResponse<PharmacyProfile>> {
-    return apiFetch<ApiResponse<PharmacyProfile>>('/pharmacy/profile', {
-        headers: authHeaders(),
-    });
+    return apiFetch<ApiResponse<PharmacyProfile>>('/pharmacy/profile');
 }
 
 export async function getInventory(page: number = 1): Promise<ApiResponse<PaginatedResponse<InventoryItem>>> {
-    return apiFetch<ApiResponse<PaginatedResponse<InventoryItem>>>(`/pharmacy/inventory?page=${page}`, {
-        headers: authHeaders(),
-    });
+    return apiFetch<ApiResponse<PaginatedResponse<InventoryItem>>>(`/pharmacy/inventory?page=${page}`);
 }
 
 /**
@@ -126,6 +108,16 @@ export async function addInventoryItem(data: {
 
     const formData = new FormData();
     formData.append('file', file);
+
+    // Manual fetch still needed for FormData, but we can use a helper or just get token here
+    // However, since we refactored config.ts, it's better to keep it clean.
+    // I'll leave the manual token here for NOW as it uses fetch() directly with FormData, 
+    // unless I refactor apiFetch to support FormData.
+    const getAuthToken = () => {
+        if (typeof document === 'undefined') return null;
+        const match = document.cookie.match(/auth_token=([^;]+)/);
+        return match ? match[1] : null;
+    };
 
     const token = getAuthToken();
     const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
@@ -156,7 +148,6 @@ export async function updateInventoryItem(id: number, data: {
 }): Promise<ApiResponse<unknown>> {
     return apiFetch<ApiResponse<unknown>>(`/pharmacy/inventory/${id}`, {
         method: 'PUT',
-        headers: authHeaders(),
         body: JSON.stringify(data),
     });
 }
@@ -164,6 +155,5 @@ export async function updateInventoryItem(id: number, data: {
 export async function deleteInventoryItem(id: number): Promise<ApiResponse<unknown>> {
     return apiFetch<ApiResponse<unknown>>(`/pharmacy/inventory/${id}`, {
         method: 'DELETE',
-        headers: authHeaders(),
     });
 }

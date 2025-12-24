@@ -21,6 +21,15 @@ export class ApiError extends Error {
 }
 
 /**
+ * Helper to get authentication token from cookies (browser-only)
+ */
+function getAuthToken(): string | null {
+    if (typeof document === 'undefined') return null;
+    const match = document.cookie.match(/auth_token=([^;]+)/);
+    return match ? match[1] : null;
+}
+
+/**
  * Reusable fetch wrapper with error handling
  */
 export async function apiFetch<T>(
@@ -29,9 +38,11 @@ export async function apiFetch<T>(
 ): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
 
+    const token = getAuthToken();
     const defaultHeaders: HeadersInit = {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
     };
 
     const response = await fetch(url, {
