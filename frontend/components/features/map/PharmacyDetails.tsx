@@ -1,6 +1,8 @@
+import * as React from "react"
 import { Pharmacy } from "@/lib/mock-data"
-import { ArrowLeft, Phone, AlertCircle, CheckCircle, FileText } from "lucide-react"
+import { ArrowLeft, Phone, AlertCircle, CheckCircle, FileText, XCircle, Flag } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { ReportModal } from "./ReportModal"
 
 interface PharmacyDetailsProps {
     pharmacy: Pharmacy
@@ -8,6 +10,8 @@ interface PharmacyDetailsProps {
 }
 
 export function PharmacyDetails({ pharmacy, onBack }: PharmacyDetailsProps) {
+    const [reportModalOpen, setReportModalOpen] = React.useState(false)
+
     return (
         <div className="flex flex-col h-full bg-gray-50 overflow-y-auto">
             {/* Header / Nav */}
@@ -25,16 +29,35 @@ export function PharmacyDetails({ pharmacy, onBack }: PharmacyDetailsProps) {
                     <div className="p-5">
                         <div className="flex justify-between items-start">
                             <div>
-                                <div className="flex items-center gap-2">
+                                <div className="flex flex-wrap items-center gap-2">
                                     <h2 className="text-lg font-bold text-gray-900 uppercase">{pharmacy.name}</h2>
                                     {pharmacy.verification_status === 'verified' && (
-                                        <div className="bg-blue-50 text-blue-600 text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1">
+                                        <div className="bg-blue-50 text-blue-600 text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1 shrink-0">
                                             <CheckCircle className="h-3 w-3" />
                                             VERIFIED
                                         </div>
                                     )}
+                                    {pharmacy.verification_status === 'pending' && (
+                                        <div className="bg-amber-50 text-amber-600 text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1 shrink-0">
+                                            <AlertCircle className="h-3 w-3" />
+                                            PENDING
+                                        </div>
+                                    )}
+                                    {pharmacy.verification_status === 'rejected' && (
+                                        <div className="bg-red-50 text-red-600 text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1 shrink-0">
+                                            <XCircle className="h-3 w-3" />
+                                            REJECTED
+                                        </div>
+                                    )}
                                 </div>
                                 <p className="text-xs text-gray-500 mt-1">{pharmacy.address}</p>
+
+                                {(pharmacy.total_reports ?? 0) > 0 && (
+                                    <div className="mt-2 flex items-center gap-1.5 text-red-500">
+                                        <Flag className="h-3 w-3" />
+                                        <span className="text-[10px] font-bold uppercase tracking-wider">RECEIVED {pharmacy.total_reports} REPORTS</span>
+                                    </div>
+                                )}
                             </div>
                             <div className="bg-pink-50 h-10 w-10 rounded-xl flex items-center justify-center text-sm font-bold text-[#E91E63]">
                                 {pharmacy.name.charAt(0)}
@@ -115,11 +138,21 @@ export function PharmacyDetails({ pharmacy, onBack }: PharmacyDetailsProps) {
 
             {/* Footer Action */}
             <div className="p-4 mt-auto">
-                <Button className="w-full bg-[#E91E63] hover:bg-[#D81B60] h-12 rounded-xl text-white font-semibold">
+                <Button
+                    onClick={() => setReportModalOpen(true)}
+                    className="w-full bg-[#E91E63] hover:bg-[#D81B60] h-12 rounded-xl text-white font-semibold"
+                >
                     <AlertCircle className="mr-2 h-4 w-4" />
                     Report Issue
                 </Button>
             </div>
+
+            <ReportModal
+                pharmacyId={pharmacy.id}
+                pharmacyName={pharmacy.name}
+                isOpen={reportModalOpen}
+                onClose={() => setReportModalOpen(false)}
+            />
         </div>
     )
 }

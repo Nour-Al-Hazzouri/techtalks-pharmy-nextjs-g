@@ -17,6 +17,7 @@ export interface Pharmacy {
     phone: string
     license_number?: string
     verification_status?: string
+    total_reports?: number
     coordinates: [number, number] // [lat, lng]
     availability?: MedicineStock[]
 }

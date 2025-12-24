@@ -18,6 +18,7 @@ export interface PublicPharmacy {
     longitude: string;
     verification_status: string;
     rating: string | null;
+    total_reports: number;
     distance?: string;
 }
 
@@ -44,4 +45,14 @@ export async function getPharmacies(params?: { verified?: '0' | '1' }): Promise<
  */
 export async function searchMedicines(query: string): Promise<ApiResponse<SearchedMedicine[]>> {
     return apiFetch<ApiResponse<SearchedMedicine[]>>(`/medicines/search?name=${encodeURIComponent(query)}`);
+}
+
+/**
+ * Submit report for a pharmacy
+ */
+export async function submitReport(data: { pharmacy_id: number | string, report_type: string, reason?: string }): Promise<ApiResponse<any>> {
+    return apiFetch<ApiResponse<any>>('/reports', {
+        method: 'POST',
+        body: JSON.stringify(data)
+    });
 }

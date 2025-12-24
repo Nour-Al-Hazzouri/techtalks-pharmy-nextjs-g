@@ -35,6 +35,7 @@ function mapApiToPharmacy(p: PublicPharmacy, medicine?: { name: string, generic_
         phone: p.phone,
         license_number: p.license_number,
         verification_status: p.verification_status,
+        total_reports: p.total_reports,
         coordinates: [parseFloat(p.latitude), parseFloat(p.longitude)],
         availability: medicine ? [
             {
