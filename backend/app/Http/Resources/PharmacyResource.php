@@ -21,6 +21,7 @@ class PharmacyResource extends JsonResource
             'verification_status' => $this->verification_status,
             'rejection_reason' => $this->when($this->verification_status === 'rejected', $this->rejection_reason),
             'rating' => $this->rating,
+            'total_reports' => $this->reports()->count(),
             'distance' => $this->when(isset($this->distance), $this->distance),
             'medicines' => MedicineResource::collection($this->whenLoaded('medicines')),
             'pivot' => $this->whenPivotLoaded('pharmacy_medicines', function () {

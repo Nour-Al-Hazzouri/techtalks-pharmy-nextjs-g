@@ -1,7 +1,8 @@
+import * as React from "react"
 import { Pharmacy } from "@/lib/mock-data"
-import { ArrowLeft, Clock, Mail, Phone, AlertCircle, Circle } from "lucide-react"
+import { ArrowLeft, Phone, AlertCircle, CheckCircle, FileText, XCircle, Flag } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import Image from "next/image"
+import { ReportModal } from "./ReportModal"
 
 interface PharmacyDetailsProps {
     pharmacy: Pharmacy
@@ -9,6 +10,8 @@ interface PharmacyDetailsProps {
 }
 
 export function PharmacyDetails({ pharmacy, onBack }: PharmacyDetailsProps) {
+    const [reportModalOpen, setReportModalOpen] = React.useState(false)
+
     return (
         <div className="flex flex-col h-full bg-gray-50 overflow-y-auto">
             {/* Header / Nav */}
@@ -23,32 +26,50 @@ export function PharmacyDetails({ pharmacy, onBack }: PharmacyDetailsProps) {
             <div className="p-4 space-y-4">
                 {/* Main Card */}
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                    <div className="h-32 bg-gray-200 relative">
-                        {/* Placeholder for cover image */}
-                        <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">
-                            Cover Image
-                        </div>
-                    </div>
                     <div className="p-5">
                         <div className="flex justify-between items-start">
                             <div>
-                                <h2 className="text-lg font-bold text-gray-900 uppercase">{pharmacy.name}</h2>
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <h2 className="text-lg font-bold text-gray-900 uppercase">{pharmacy.name}</h2>
+                                    {pharmacy.verification_status === 'verified' && (
+                                        <div className="bg-blue-50 text-blue-600 text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1 shrink-0">
+                                            <CheckCircle className="h-3 w-3" />
+                                            VERIFIED
+                                        </div>
+                                    )}
+                                    {pharmacy.verification_status === 'pending' && (
+                                        <div className="bg-amber-50 text-amber-600 text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1 shrink-0">
+                                            <AlertCircle className="h-3 w-3" />
+                                            PENDING
+                                        </div>
+                                    )}
+                                    {pharmacy.verification_status === 'rejected' && (
+                                        <div className="bg-red-50 text-red-600 text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1 shrink-0">
+                                            <XCircle className="h-3 w-3" />
+                                            REJECTED
+                                        </div>
+                                    )}
+                                </div>
                                 <p className="text-xs text-gray-500 mt-1">{pharmacy.address}</p>
+
+                                {(pharmacy.total_reports ?? 0) > 0 && (
+                                    <div className="mt-2 flex items-center gap-1.5 text-red-500">
+                                        <Flag className="h-3 w-3" />
+                                        <span className="text-[10px] font-bold uppercase tracking-wider">RECEIVED {pharmacy.total_reports} REPORTS</span>
+                                    </div>
+                                )}
                             </div>
-                            <div className="bg-gray-100 h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold text-gray-500">
+                            <div className="bg-pink-50 h-10 w-10 rounded-xl flex items-center justify-center text-sm font-bold text-[#E91E63]">
                                 {pharmacy.name.charAt(0)}
                             </div>
                         </div>
 
-                        <div className="mt-6 pt-6 border-t border-gray-50">
-                            <div className="flex items-center gap-3">
-                                <Clock className="h-4 w-4 text-gray-300" />
-                                <div>
-                                    <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">WORKING HOURS</p>
-                                    <p className="text-xs font-medium text-gray-700 mt-0.5">{pharmacy.workingHours || "09:00 - 22:00"}</p>
-                                </div>
+                        {pharmacy.license_number && (
+                            <div className="mt-4 pt-4 border-t border-gray-50 flex items-center gap-2 text-gray-400">
+                                <FileText className="h-3.5 w-3.5" />
+                                <span className="text-[10px] font-medium tracking-wider uppercase">LICENSE: {pharmacy.license_number}</span>
                             </div>
-                        </div>
+                        )}
                     </div>
                 </div>
 
@@ -65,32 +86,47 @@ export function PharmacyDetails({ pharmacy, onBack }: PharmacyDetailsProps) {
                             <p className="text-sm font-medium text-gray-900">{pharmacy.phone}</p>
                         </div>
                     </div>
-
-                    <div className="flex items-center gap-3">
-                        <div className="bg-pink-50 p-2 rounded-full">
-                            <Mail className="h-4 w-4 text-[#E91E63]" />
-                        </div>
-                        <div>
-                            <p className="text-[10px] text-gray-400">Email</p>
-                            <p className="text-sm font-medium text-gray-900">{pharmacy.email || "N/A"}</p>
-                        </div>
-                    </div>
                 </div>
 
                 {/* Medicine Availability */}
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
                     <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-4">MEDICINE AVAILABILITY</h3>
-                    <div className="space-y-4">
+                    <div className="space-y-6">
                         {pharmacy.availability?.map((item, idx) => (
-                            <div key={idx} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-900">{item.name}</p>
-                                    <div className="flex gap-2 mt-1">
-                                        <span className={`text-[10px] ${item.stock === 'Low Stock' ? 'text-red-500' : 'text-gray-500'}`}>{item.stock}</span>
-                                        <span className="text-[10px] text-gray-300">QUANTITY: {item.quantity}</span>
+                            <div key={idx} className="pb-6 border-b border-gray-50 last:border-0 last:pb-0">
+                                <div className="flex items-start justify-between">
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                            <p className="text-sm font-bold text-gray-900">{item.name}</p>
+                                            {item.category && (
+                                                <span className="bg-gray-100 text-gray-600 text-[10px] px-1.5 py-0.5 rounded uppercase font-medium">
+                                                    {item.category}
+                                                </span>
+                                            )}
+                                        </div>
+                                        {item.generic_name && (
+                                            <p className="text-[11px] text-gray-500 mt-0.5 italic">({item.generic_name})</p>
+                                        )}
+                                    </div>
+                                    <div className={`h-2.5 w-2.5 rounded-full mt-1 ${item.stock === 'In Stock' ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                                </div>
+
+                                {item.description && (
+                                    <p className="mt-2 text-xs text-gray-500 leading-relaxed bg-gray-50 p-2 rounded-lg">
+                                        {item.description}
+                                    </p>
+                                )}
+
+                                <div className="flex gap-4 mt-3">
+                                    <div>
+                                        <p className="text-[9px] text-gray-400 uppercase font-bold tracking-tighter">STOCK STATUS</p>
+                                        <p className={`text-[11px] font-semibold ${item.stock === 'Low Stock' ? 'text-red-500' : 'text-gray-600'}`}>{item.stock}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[9px] text-gray-400 uppercase font-bold tracking-tighter">QUANTITY</p>
+                                        <p className="text-[11px] font-semibold text-gray-600">{item.quantity}</p>
                                     </div>
                                 </div>
-                                <div className={`h-2.5 w-2.5 rounded-full ${item.stock === 'In Stock' ? 'bg-green-500' : 'bg-red-500'}`}></div>
                             </div>
                         ))}
                         {(!pharmacy.availability || pharmacy.availability.length === 0) && (
@@ -102,11 +138,21 @@ export function PharmacyDetails({ pharmacy, onBack }: PharmacyDetailsProps) {
 
             {/* Footer Action */}
             <div className="p-4 mt-auto">
-                <Button className="w-full bg-[#E91E63] hover:bg-[#D81B60] h-12 rounded-xl text-white font-semibold">
+                <Button
+                    onClick={() => setReportModalOpen(true)}
+                    className="w-full bg-[#E91E63] hover:bg-[#D81B60] h-12 rounded-xl text-white font-semibold"
+                >
                     <AlertCircle className="mr-2 h-4 w-4" />
                     Report Issue
                 </Button>
             </div>
+
+            <ReportModal
+                pharmacyId={pharmacy.id}
+                pharmacyName={pharmacy.name}
+                isOpen={reportModalOpen}
+                onClose={() => setReportModalOpen(false)}
+            />
         </div>
     )
 }

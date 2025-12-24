@@ -9,18 +9,17 @@ import { renderToString } from 'react-dom/server'
 import { Pill } from "lucide-react"
 
 // Create custom icons using DivIcon and SVG
-const createPharmacyIcon = (status: string) => {
-    // Determine color based on status (optional, using brand pink for now)
-    const color = status === "Open" ? "#E91E63" : "#6B7280"
+const createPharmacyIcon = () => {
+    const color = "#E91E63" // Brand pink
 
     // Render the Lucide icon to a string
     const iconHtml = renderToString(
         <div className="relative flex flex-col items-center justify-center translate-y-[-50%]">
-            <div className={`w-8 h-8 rounded-full bg-white shadow-md flex items-center justify-center border-2 ${status === "Open" ? 'border-[#E91E63]' : 'border-gray-500'}`}>
-                <Pill className={`w-4 h-4 ${status === "Open" ? 'text-[#E91E63]' : 'text-gray-500'}`} />
+            <div className={`w-8 h-8 rounded-full bg-white shadow-md flex items-center justify-center border-2 border-[#E91E63]`}>
+                <Pill className={`w-4 h-4 text-[#E91E63]`} />
             </div>
             {/* Tiny triangle for the pin tip */}
-            <div className={`w-2 h-2 rotate-45 transform -mt-1 ${status === "Open" ? 'bg-[#E91E63]' : 'bg-gray-500'}`}></div>
+            <div className={`w-2 h-2 rotate-45 transform -mt-1 bg-[#E91E63]`}></div>
         </div>
     )
 
@@ -65,7 +64,7 @@ export default function PharmacyMap({ pharmacies, onSelect }: PharmacyMapProps) 
                 <Marker
                     key={pharmacy.id}
                     position={pharmacy.coordinates}
-                    icon={createPharmacyIcon(pharmacy.status)}
+                    icon={createPharmacyIcon()}
                     eventHandlers={{
                         click: () => {
                             onSelect(pharmacy)
@@ -74,7 +73,6 @@ export default function PharmacyMap({ pharmacies, onSelect }: PharmacyMapProps) 
                 >
                     <Popup>
                         <div className="font-semibold">{pharmacy.name}</div>
-                        <div className="text-xs text-gray-500">{pharmacy.status}</div>
                     </Popup>
                 </Marker>
             ))}

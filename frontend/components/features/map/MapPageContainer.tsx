@@ -5,8 +5,8 @@ import dynamic from "next/dynamic"
 import { MapHeader } from "@/components/features/map/MapHeader"
 import { PharmacyList } from "@/components/features/map/PharmacyList"
 import { PharmacyDetails } from "@/components/features/map/PharmacyDetails"
-import { MOCK_PHARMACIES, Pharmacy } from "@/lib/mock-data"
-import { ChevronRight, ChevronLeft, Search } from "lucide-react"
+import { Pharmacy } from "@/lib/mock-data" // Keeping type import for now
+import { ChevronRight, ChevronLeft, Search, Loader2 } from "lucide-react"
 import { useMediaQuery } from "@/hooks/use-media-query"
 import { useSearchParams } from "next/navigation"
 import {
@@ -16,6 +16,7 @@ import {
     DrawerTitle,
     DrawerDescription,
 } from "@/components/ui/drawer"
+import { getPharmacies, searchMedicines, PublicPharmacy } from "@/lib/api/public"
 
 const PharmacyMap = dynamic(
     () => import("@/components/features/map/PharmacyMap"),
@@ -25,7 +26,33 @@ const PharmacyMap = dynamic(
     }
 )
 
+function mapApiToPharmacy(p: PublicPharmacy, medicine?: { name: string, generic_name: string, category: string, description: string }): Pharmacy {
+    return {
+        id: String(p.id),
+        name: p.name,
+        address: p.address,
+        rating: p.rating ? parseFloat(p.rating) : 4.5,
+        phone: p.phone,
+        license_number: p.license_number,
+        verification_status: p.verification_status,
+        total_reports: p.total_reports,
+        coordinates: [parseFloat(p.latitude), parseFloat(p.longitude)],
+        availability: medicine ? [
+            {
+                name: medicine.name,
+                generic_name: medicine.generic_name,
+                category: medicine.category,
+                description: medicine.description,
+                stock: "In Stock",
+                quantity: "Available"
+            }
+        ] : []
+    }
+}
+
 export function MapPageContainer() {
+    const [pharmacies, setPharmacies] = React.useState<Pharmacy[]>([])
+    const [loading, setLoading] = React.useState(true)
     const [selectedPharmacy, setSelectedPharmacy] = React.useState<Pharmacy | null>(null)
     const [isPanelOpen, setIsPanelOpen] = React.useState(true)
     const [searchQuery, setSearchQuery] = React.useState("")
@@ -33,65 +60,118 @@ export function MapPageContainer() {
     const [snap, setSnap] = React.useState<number | string | null>(0.5)
     const searchParams = useSearchParams()
 
+    // Fetch initial pharmacies (all)
     React.useEffect(() => {
-        // Initial mobile state: Closed to show full map
-        if (window.innerWidth < 768) {
-            setIsPanelOpen(false)
-        }
-
-        // Handle URL search params
         const q = searchParams.get('q')
         if (q) {
             setSearchQuery(q)
-            setIsPanelOpen(true)
-            // On mobile, if we have a search, open to half.
-            if (window.innerWidth < 768) {
-                setSnap(0.5)
-            }
+            handleSearch(q)
+        } else {
+            fetchAllPharmacies()
         }
-    }, [searchParams])
 
+        // Initial mobile state
+        if (window.innerWidth < 768) {
+            setIsPanelOpen(false)
+        }
+    }, []) // Empty deps to run once on mount
 
-    // Filter pharmacies based on search query (checking availability)
-    const filteredPharmacies = React.useMemo(() => {
-        if (!searchQuery) return [] // No results initially
-        return MOCK_PHARMACIES.filter(pharmacy =>
-            pharmacy.availability?.some(medicine =>
-                medicine.name.toLowerCase().includes(searchQuery.toLowerCase())
-            )
-        )
-    }, [searchQuery])
+    const fetchAllPharmacies = async () => {
+        try {
+            setLoading(true)
+            // Fetch all pharmacies (verified and unverified) so new registrations appear locally
+            const res = await getPharmacies()
+            const mapped = res.data.data.map(p => mapApiToPharmacy(p))
+            setPharmacies(mapped)
+        } catch (error) {
+            console.error("Failed to fetch pharmacies", error)
+        } finally {
+            setLoading(false)
+        }
+    }
 
     const handlePharmacySelect = (pharmacy: Pharmacy) => {
         setSelectedPharmacy(pharmacy)
         setIsPanelOpen(true)
-        if (!isDesktop) setSnap(1) // Expand to full screen on mobile when selecting details
+        if (!isDesktop) setSnap(1)
     }
 
     const handleBackToList = () => {
         setSelectedPharmacy(null)
-        if (!isDesktop) setSnap(0.5) // Go back to half screen on mobile
+        if (!isDesktop) setSnap(0.5)
     }
 
-    const handleSearch = (term: string) => {
+    const handleSearch = async (term: string) => {
         setSearchQuery(term)
-        setSelectedPharmacy(null) // Reset selection when searching
-        setIsPanelOpen(true) // Auto-open panel on search
-        if (!isDesktop) setSnap(0.5) // Ensure it opens to half screen
+        setSelectedPharmacy(null)
+
+        if (!term.trim()) {
+            // If cleared, fetch all again
+            fetchAllPharmacies()
+            return
+        }
+
+        setIsPanelOpen(true)
+        if (!isDesktop) setSnap(0.5)
+
+        try {
+            setLoading(true)
+            const res = await searchMedicines(term)
+            // The search returns medicines, each with pharmacies. 
+            // We want to collect ALL pharmacies that have ANY of the matching medicines.
+            // And prevent duplicates.
+
+            const uniquePharmacies = new Map<string, Pharmacy>()
+
+            res.data.forEach(medicine => {
+                medicine.pharmacies.forEach(p => {
+                    if (!uniquePharmacies.has(String(p.id))) {
+                        uniquePharmacies.set(String(p.id), mapApiToPharmacy(p, medicine))
+                    } else {
+                        const existing = uniquePharmacies.get(String(p.id))!
+                        if (existing.availability) {
+                            // Check if this specific medicine is already added
+                            if (!existing.availability.some(m => m.name === medicine.name)) {
+                                existing.availability.push({
+                                    name: medicine.name,
+                                    generic_name: medicine.generic_name,
+                                    category: medicine.category,
+                                    description: medicine.description,
+                                    stock: "In Stock",
+                                    quantity: "Available"
+                                })
+                            }
+                        }
+                    }
+                })
+            })
+
+            setPharmacies(Array.from(uniquePharmacies.values()))
+
+        } catch (error) {
+            console.error("Search failed", error)
+            setPharmacies([])
+        } finally {
+            setLoading(false)
+        }
     }
 
     const handleClearSearch = () => {
         setSearchQuery("")
-        if (!isDesktop) setIsPanelOpen(false) // Close drawer on mobile when cleared? Or keep open with welcome?
-        // User requested "no markers... clicking clear search... same effect".
-        // If clear -> empty state. On mobile, maybe close it to see map?
-        // Let's close it for cleaner experience, or show "Welcome" in drawer.
-        // Prompt: "When the user enter the map page, I want the full screen to be a map".
-        // So initially closed. If cleared, close it.
+        fetchAllPharmacies()
         if (!isDesktop) setIsPanelOpen(false)
     }
 
     const renderPanelContent = () => {
+        if (loading) {
+            return (
+                <div className="flex flex-col items-center justify-center h-40">
+                    <Loader2 className="h-8 w-8 animate-spin text-[#E91E63] mb-2" />
+                    <p className="text-gray-500 text-sm">Finding pharmacies...</p>
+                </div>
+            )
+        }
+
         if (selectedPharmacy) {
             return (
                 <PharmacyDetails
@@ -100,20 +180,24 @@ export function MapPageContainer() {
                 />
             )
         }
-        if (!searchQuery) {
+
+        if (pharmacies.length === 0) {
             return (
                 <div className="flex flex-col items-center justify-center h-full p-8 text-center bg-gray-50/50">
                     <div className="bg-pink-50 p-4 rounded-full mb-4">
                         <Search className="h-8 w-8 text-[#E91E63]" />
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-1">Find Your Medicine</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-1">No Pharmacies Found</h3>
                     <p className="text-sm text-gray-500 max-w-xs mx-auto">
-                        Search for a medicine above to see which pharmacies have it in stock.
+                        {searchQuery
+                            ? `We couldn't find any pharmacies with "${searchQuery}"`
+                            : "No registered pharmacies found in your area."}
                     </p>
                 </div>
             )
         }
-        return <PharmacyList pharmacies={filteredPharmacies} onSelect={handlePharmacySelect} />
+
+        return <PharmacyList pharmacies={pharmacies} onSelect={handlePharmacySelect} />
     }
 
     return (
@@ -127,7 +211,7 @@ export function MapPageContainer() {
             <main className="flex-1 flex overflow-hidden relative">
                 {/* Map Section */}
                 <div className="flex-1 relative border-r border-gray-200">
-                    <PharmacyMap pharmacies={filteredPharmacies} onSelect={handlePharmacySelect} />
+                    <PharmacyMap pharmacies={pharmacies} onSelect={handlePharmacySelect} />
 
                     {/* Toggle Panel Button (Visible on Map, Desktop Only) */}
                     <button
@@ -166,7 +250,6 @@ export function MapPageContainer() {
                     >
                         <DrawerContent className="h-full max-h-[96%] flex flex-col">
                             <div className="flex-1 overflow-hidden flex flex-col">
-                                {/* Custom Title for Accessibility if needed, or hidden */}
                                 <DrawerHeader className="sr-only">
                                     <DrawerTitle>Pharmacy Details</DrawerTitle>
                                     <DrawerDescription>List of available pharmacies</DrawerDescription>
