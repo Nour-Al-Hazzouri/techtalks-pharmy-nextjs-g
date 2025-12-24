@@ -26,12 +26,21 @@ import {
 } from "@/components/ui/select"
 import { Card, CardContent, CardTitle } from "@/components/ui/card"
 import { registerSchema, RegisterValues } from "@/lib/validations/auth"
+import { register } from "@/lib/api/auth"
+import { ApiError } from "@/lib/api/config"
+
+// Map frontend role values to backend role values
+const ROLE_MAP: Record<string, 'user' | 'pharmacist'> = {
+    'patient': 'user',
+    'pharmacy': 'pharmacist',
+}
 
 export function RegisterForm() {
     const router = useRouter()
     const [isPending, setIsPending] = React.useState(false)
     const [showPassword, setShowPassword] = React.useState(false)
     const [showConfirmPassword, setShowConfirmPassword] = React.useState(false)
+    const [apiError, setApiError] = React.useState<string | null>(null)
 
     const form = useForm<RegisterValues>({
         resolver: zodResolver(registerSchema),
@@ -47,19 +56,51 @@ export function RegisterForm() {
 
     async function onSubmit(data: RegisterValues) {
         setIsPending(true)
+        setApiError(null)
+
         try {
-            // Form validation is handled by react-hook-form before this function is called
-            // Simulate API
-            await new Promise((resolve) => setTimeout(resolve, 1500))
+            // Map role and prepare request body
+            const backendRole = ROLE_MAP[data.role] || 'user'
 
-            // Set mock auth cookie
-            document.cookie = "auth_token=mock_jwt_token; path=/; max-age=86400; SameSite=Lax"
+            const response = await register({
+                name: data.name,
+                email: data.email,
+                password: data.password,
+                password_confirmation: data.confirmPassword,
+                phone: data.phone,
+                role: backendRole,
+            })
 
-            // Redirect to Home
-            router.push('/')
+            // Store auth cookies
+            // Note: The backend currently returns user data but no token on register
+            // For now, we set a placeholder - login integration will handle proper token
+            document.cookie = `user_role=${backendRole}; path=/; max-age=86400; SameSite=Lax`
+
+            // Redirect based on role
+            if (backendRole === 'pharmacist') {
+                router.push('/dashboard')
+            } else {
+                router.push('/')
+            }
             router.refresh()
         } catch (error) {
-            console.error(error)
+            if (error instanceof ApiError) {
+                // Handle validation errors from backend
+                if (error.errors) {
+                    // Set field-specific errors
+                    Object.entries(error.errors).forEach(([field, messages]) => {
+                        const fieldName = field as keyof RegisterValues
+                        if (messages.length > 0) {
+                            form.setError(fieldName, { message: messages[0] })
+                        }
+                    })
+                } else {
+                    setApiError(error.message)
+                }
+            } else {
+                setApiError('An unexpected error occurred. Please try again.')
+                console.error(error)
+            }
         } finally {
             setIsPending(false)
         }
@@ -78,6 +119,13 @@ export function RegisterForm() {
 
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    {/* API Error Display */}
+                    {apiError && (
+                        <div className="p-3 rounded-xl bg-red-100 border border-red-300 text-red-700 text-sm">
+                            {apiError}
+                        </div>
+                    )}
+
                     <FormField
                         control={form.control}
                         name="name"
