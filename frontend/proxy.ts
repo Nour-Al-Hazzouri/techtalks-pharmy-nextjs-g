@@ -22,7 +22,7 @@ export function proxy(request: NextRequest) {
     if (isPublicPath) {
         // If already authenticated, redirect to appropriate page
         if (token) {
-            if (userRole === 'pharmacy') {
+            if (userRole === 'pharmacist') {
                 return NextResponse.redirect(new URL('/dashboard', request.url))
             }
             return NextResponse.redirect(new URL('/', request.url))
@@ -37,14 +37,14 @@ export function proxy(request: NextRequest) {
 
     // Pharmacy routes - only pharmacy users can access
     if (isPharmacyRoute) {
-        if (userRole !== 'pharmacy') {
+        if (userRole !== 'pharmacist') {
             return NextResponse.redirect(new URL('/', request.url))
         }
     }
 
     // Regular users trying to access patient-only routes (/, /map, etc.)
     // Pharmacy users shouldn't access patient pages
-    if (!isPharmacyRoute && userRole === 'pharmacy') {
+    if (!isPharmacyRoute && userRole === 'pharmacist') {
         return NextResponse.redirect(new URL('/dashboard', request.url))
     }
 
