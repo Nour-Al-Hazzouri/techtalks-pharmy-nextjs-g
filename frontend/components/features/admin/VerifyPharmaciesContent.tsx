@@ -1,8 +1,10 @@
 "use client"
 
 import * as React from "react"
-import { Search, MapPin, Phone, X, CheckCircle, Eye, ChevronLeft, XCircle } from "lucide-react"
+import { Search, MapPin, Phone, X, CheckCircle, Eye, ChevronLeft, XCircle, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
+// Helper to map API data
+import { getPharmacies } from "@/lib/api/public"
 
 interface Pharmacy {
     id: string
@@ -20,72 +22,7 @@ interface Document {
     verified: boolean
 }
 
-const MOCK_PHARMACIES: Pharmacy[] = [
-    {
-        id: "1",
-        name: "AL MANARA PHARMACY",
-        location: "Dubai, Al Barsha",
-        phone: "+971 4 123 4567",
-        mophNumber: "MOPH-2024-1234",
-        submittedDate: "2 days ago",
-        documents: [
-            { id: "d1", name: "Trade License", verified: true },
-            { id: "d2", name: "MOPH Pharmacy License", verified: true },
-            { id: "d3", name: "Pharmacist Certificate", verified: true },
-            { id: "d4", name: "Shop Location Map", verified: true },
-            { id: "d5", name: "Facility Photos", verified: false },
-        ],
-    },
-    {
-        id: "2",
-        name: "DUBAI MEDICAL CENTER",
-        location: "Dubai, Marina",
-        phone: "+971 4 234 5976",
-        mophNumber: "MOPH-2024-1235",
-        submittedDate: "1 day ago",
-        documents: [
-            { id: "d1", name: "Trade License", verified: true },
-            { id: "d2", name: "MOPH Pharmacy License", verified: true },
-            { id: "d3", name: "Pharmacist Certificate", verified: true },
-            { id: "d4", name: "Shop Location Map", verified: true },
-        ],
-    },
-    {
-        id: "3",
-        name: "WELLNESS PHARMACY",
-        location: "Dubai, JLT",
-        phone: "+971 4 345 6789",
-        mophNumber: "MOPH-2024-1236",
-        submittedDate: "3 days ago",
-        documents: [
-            { id: "d1", name: "Trade License", verified: true },
-            { id: "d2", name: "MOPH Pharmacy License", verified: false },
-        ],
-    },
-    {
-        id: "4",
-        name: "HEALTHPLUS PHARMACY",
-        location: "Abu Dhabi, Al Reem",
-        phone: "+971 2 456 7893",
-        mophNumber: "MOPH-2024-1237",
-        submittedDate: "4 days ago",
-        documents: [
-            { id: "d1", name: "Trade License", verified: true },
-        ],
-    },
-    {
-        id: "5",
-        name: "MEDICARE PHARMACY",
-        location: "Sharjah, Al Majaz",
-        phone: "+971 6 567 8921",
-        mophNumber: "MOPH-2024-1238",
-        submittedDate: "5 days ago",
-        documents: [
-            { id: "d1", name: "Trade License", verified: true },
-            { id: "d2", name: "MOPH Pharmacy License", verified: true },
-        ],
-    },
-]
+// Removed MOCK_PHARMACIES constant
 
 interface ReviewModalProps {
     pharmacy: Pharmacy | null
@@ -126,7 +63,7 @@ function ReviewModal({ pharmacy, isOpen, onClose, onApprove, onReject }: ReviewM
                     <div className="space-y-4 bg-gray-50 rounded-xl p-4">
                         <div>
                             <p className="text-xs text-gray-500">Pharmacy Name</p>
-                            <p className="text-sm font-medium text-gray-900">{pharmacy.name.replace("AL MANARA PHARMACY", "Al Manara Pharmacy")}</p>
+                            <p className="text-sm font-medium text-gray-900">{pharmacy.name}</p>
                         </div>
                         <div>
                             <p className="text-xs text-gray-500">Location</p>
@@ -201,7 +138,36 @@ function ReviewModal({ pharmacy, isOpen, onClose, onApprove, onReject }: ReviewM
 export function VerifyPharmaciesContent() {
     const [searchQuery, setSearchQuery] = React.useState("")
     const [selectedPharmacy, setSelectedPharmacy] = React.useState<Pharmacy | null>(null)
-    const [pharmacies, setPharmacies] = React.useState(MOCK_PHARMACIES)
+    const [pharmacies, setPharmacies] = React.useState<Pharmacy[]>([])
+    const [loading, setLoading] = React.useState(true)
+
+    React.useEffect(() => {
+        const fetchPending = async () => {
+            try {
+                // Fetch ONLY unverified pharmacies for verification queue
+                const res = await getPharmacies({ verified: '0' })
+                if (res.status && res.data) {
+                    const mapped = res.data.data.map((p: any) => ({
+                        id: String(p.id),
+                        name: p.name,
+                        location: p.address,
+                        phone: p.phone,
+                        mophNumber: p.license_number,
+                        submittedDate: "Pending", // Mocked as API doesn't return created_at here yet
+                        documents: [
+                            { id: "d1", name: "License Document", verified: false }
+                        ]
+                    }))
+                    setPharmacies(mapped)
+                }
+            } catch (error) {
+                console.error("Failed to fetch pending pharmacies", error)
+            } finally {
+                setLoading(false)
+            }
+        }
+        fetchPending()
+    }, [])
 
     const filteredPharmacies = pharmacies.filter(
         (p) =>
@@ -210,13 +176,25 @@ export function VerifyPharmaciesContent() {
     )
 
     const handleApprove = (id: string) => {
+        // TODO: Call API to verify
+        console.log("Approved", id)
         setPharmacies((prev) => prev.filter((p) => p.id !== id))
         setSelectedPharmacy(null)
     }
 
     const handleReject = (id: string) => {
+        // TODO: Call API to reject
+        console.log("Rejected", id)
         setPharmacies((prev) => prev.filter((p) => p.id !== id))
         setSelectedPharmacy(null)
+    }
+
+    if (loading) {
+        return (
+            <div className="flex-1 bg-gray-50 flex items-center justify-center h-full min-h-[50vh]">
+                <Loader2 className="h-8 w-8 animate-spin text-[#E91E63]" />
+            </div>
+        )
     }
 
     return (
@@ -238,45 +216,51 @@ export function VerifyPharmaciesContent() {
                 />
             </div>
 
-            {/* Pharmacy List - Single column on mobile, 2 columns on desktop */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {filteredPharmacies.map((pharmacy) => (
-                    <button
-                        key={pharmacy.id}
-                        onClick={() => setSelectedPharmacy(pharmacy)}
-                        className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 text-left hover:shadow-md transition-shadow"
-                    >
-                        <div className="flex items-start justify-between gap-3">
-                            <div className="flex-1 min-w-0">
-                                <h3 className="text-sm font-semibold text-gray-900 mb-2">
-                                    {pharmacy.name}
-                                </h3>
-                                <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
-                                    <MapPin className="h-3 w-3 shrink-0" />
-                                    <span>{pharmacy.location}</span>
-                                </div>
-                                <div className="flex items-center gap-2 text-xs text-gray-500 mb-3">
-                                    <Phone className="h-3 w-3 shrink-0" />
-                                    <span>{pharmacy.phone}</span>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-[10px] text-gray-400 uppercase">License Number</p>
-                                        <p className="text-xs text-gray-600">{pharmacy.mophNumber}</p>
+            {pharmacies.length === 0 ? (
+                <div className="flex flex-col items-center justify-center p-8 text-center text-gray-500">
+                    <p>No pending pharmacy verifications.</p>
+                </div>
+            ) : (
+                /* Pharmacy List - Single column on mobile, 2 columns on desktop */
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {filteredPharmacies.map((pharmacy) => (
+                        <button
+                            key={pharmacy.id}
+                            onClick={() => setSelectedPharmacy(pharmacy)}
+                            className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 text-left hover:shadow-md transition-shadow"
+                        >
+                            <div className="flex items-start justify-between gap-3">
+                                <div className="flex-1 min-w-0">
+                                    <h3 className="text-sm font-semibold text-gray-900 mb-2">
+                                        {pharmacy.name}
+                                    </h3>
+                                    <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
+                                        <MapPin className="h-3 w-3 shrink-0" />
+                                        <span>{pharmacy.location}</span>
                                     </div>
-                                    <div className="text-right">
-                                        <p className="text-[10px] text-gray-400 uppercase">Submitted</p>
-                                        <p className="text-xs text-gray-600">{pharmacy.submittedDate}</p>
+                                    <div className="flex items-center gap-2 text-xs text-gray-500 mb-3">
+                                        <Phone className="h-3 w-3 shrink-0" />
+                                        <span>{pharmacy.phone}</span>
                                     </div>
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="text-[10px] text-gray-400 uppercase">License Number</p>
+                                            <p className="text-xs text-gray-600">{pharmacy.mophNumber}</p>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-[10px] text-gray-400 uppercase">Submitted</p>
+                                            <p className="text-xs text-gray-600">{pharmacy.submittedDate}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="shrink-0 h-10 w-10 md:h-12 md:w-12 rounded-xl bg-orange-50 flex items-center justify-center">
+                                    <div className="h-6 w-6 rounded bg-orange-100" />
                                 </div>
                             </div>
-                            <div className="shrink-0 h-10 w-10 md:h-12 md:w-12 rounded-xl bg-orange-50 flex items-center justify-center">
-                                <div className="h-6 w-6 rounded bg-orange-100" />
-                            </div>
-                        </div>
-                    </button>
-                ))}
-            </div>
+                        </button>
+                    ))}
+                </div>
+            )}
 
             {/* Review Modal */}
             <ReviewModal
