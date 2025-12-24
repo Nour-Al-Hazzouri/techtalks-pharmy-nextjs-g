@@ -30,3 +30,12 @@ export async function login(email: string, password: string): Promise<ApiRespons
         body: JSON.stringify({ email, password }),
     });
 }
+
+/**
+ * Logout user
+ */
+export async function logout(): Promise<ApiResponse<unknown>> {
+    return apiFetch<ApiResponse<unknown>>('/auth/logout', {
+        method: 'POST',
+    });
+}

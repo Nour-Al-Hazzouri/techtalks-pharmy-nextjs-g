@@ -2,20 +2,27 @@
 
 import { MapPin, LogOut } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { logout } from "@/lib/api/auth"
 import { MedicineSearchBar } from "@/components/features/medicine/MedicineSearchBar"
 import { Button } from "@/components/ui/button"
 
 export function MedicineSearchHome() {
     const router = useRouter()
 
-    const handleLogout = () => {
-        // Clear auth cookies
-        document.cookie = "auth_token=; path=/; max-age=0"
-        document.cookie = "user_role=; path=/; max-age=0"
+    const handleLogout = async () => {
+        try {
+            await logout()
+        } catch (error) {
+            console.error("Backend logout failed:", error)
+        } finally {
+            // Clear auth cookies
+            document.cookie = "auth_token=; path=/; max-age=0"
+            document.cookie = "user_role=; path=/; max-age=0"
 
-        // Redirect to login
-        router.push("/login")
-        router.refresh()
+            // Redirect to login
+            router.push("/login")
+            router.refresh()
+        }
     }
 
     return (

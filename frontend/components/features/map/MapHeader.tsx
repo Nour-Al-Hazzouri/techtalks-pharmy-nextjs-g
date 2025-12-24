@@ -2,6 +2,7 @@
 
 import { MapPin, X, LogOut } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { logout } from "@/lib/api/auth"
 import { ExpandableSearchBar } from "./ExpandableSearchBar"
 import { Button } from "@/components/ui/button"
 
@@ -14,14 +15,21 @@ interface MapHeaderProps {
 export function MapHeader({ searchQuery, onSearch, onClear }: MapHeaderProps) {
     const router = useRouter()
 
-    const handleLogout = () => {
-        // Clear auth cookies
-        document.cookie = "auth_token=; path=/; max-age=0"
-        document.cookie = "user_role=; path=/; max-age=0"
 
-        // Redirect to login
-        router.push("/login")
-        router.refresh()
+    const handleLogout = async () => {
+        try {
+            await logout()
+        } catch (error) {
+            console.error("Backend logout failed:", error)
+        } finally {
+            // Clear auth cookies
+            document.cookie = "auth_token=; path=/; max-age=0"
+            document.cookie = "user_role=; path=/; max-age=0"
+
+            // Redirect to login
+            router.push("/login")
+            router.refresh()
+        }
     }
 
     return (
