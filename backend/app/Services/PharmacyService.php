@@ -57,7 +57,7 @@ class PharmacyService
     
     public function rejectPharmacy($id, $reason)
     {
-        return $this->repo->update($id, ['verification_status' => 'rejected', 'rejection_reason' => $reason]);
+        return $this->repo->update($id, ['verification_status' => 'rejected', 'verified' => false, 'rejection_reason' => $reason]);
     }
 
     public function getTopRated()

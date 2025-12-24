@@ -5,6 +5,7 @@ import { Search, MapPin, Phone, X, CheckCircle, Eye, ChevronLeft, XCircle, Loade
 import { cn } from "@/lib/utils"
 // Helper to map API data
 import { getPharmacies } from "@/lib/api/public"
+import { approvePharmacy, rejectPharmacy } from "@/lib/api/admin"
 
 interface Pharmacy {
     id: string
@@ -175,18 +176,31 @@ export function VerifyPharmaciesContent() {
             p.mophNumber.toLowerCase().includes(searchQuery.toLowerCase())
     )
 
-    const handleApprove = (id: string) => {
-        // TODO: Call API to verify
-        console.log("Approved", id)
-        setPharmacies((prev) => prev.filter((p) => p.id !== id))
-        setSelectedPharmacy(null)
+    const handleApprove = async (id: string) => {
+        try {
+            const res = await approvePharmacy(id)
+            if (res.status) {
+                setPharmacies((prev) => prev.filter((p) => p.id !== id))
+                setSelectedPharmacy(null)
+            }
+        } catch (error) {
+            console.error("Failed to approve pharmacy:", error)
+        }
     }
 
-    const handleReject = (id: string) => {
-        // TODO: Call API to reject
-        console.log("Rejected", id)
-        setPharmacies((prev) => prev.filter((p) => p.id !== id))
-        setSelectedPharmacy(null)
+    const handleReject = async (id: string) => {
+        const reason = window.prompt("Enter rejection reason:")
+        if (reason === null) return // Canceled
+
+        try {
+            const res = await rejectPharmacy(id, reason || "Documents invalid or incomplete")
+            if (res.status) {
+                setPharmacies((prev) => prev.filter((p) => p.id !== id))
+                setSelectedPharmacy(null)
+            }
+        } catch (error) {
+            console.error("Failed to reject pharmacy:", error)
+        }
     }
 
     if (loading) {
