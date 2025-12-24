@@ -75,7 +75,8 @@ export function MapPageContainer() {
     const fetchAllPharmacies = async () => {
         try {
             setLoading(true)
-            const res = await getPharmacies({ verified: '1' })
+            // Fetch all pharmacies (verified and unverified) so new registrations appear locally
+            const res = await getPharmacies()
             const mapped = res.data.data.map(p => mapApiToPharmacy(p))
             setPharmacies(mapped)
         } catch (error) {

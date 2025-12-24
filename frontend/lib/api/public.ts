@@ -18,7 +18,7 @@ export interface PublicPharmacy {
     longitude: string;
     verification_status: string;
     rating: string | null;
-    distance?: string; // calculated or from API
+    distance?: string;
 }
 
 export interface SearchedMedicine {

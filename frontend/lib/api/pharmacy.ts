@@ -3,12 +3,9 @@
  * Handles pharmacy-related API calls (pharmacist role)
  */
 
-import { apiFetch, ApiError } from './config';
+import { apiFetch, ApiError, API_BASE_URL } from './config';
 import { ApiResponse } from './types';
 
-/**
- * Dashboard statistics from API
- */
 export interface DashboardStats {
     total_medicines: number;
     total_available: number;
@@ -18,9 +15,6 @@ export interface DashboardStats {
     average_rating: number | null;
 }
 
-/**
- * Pharmacy profile from API
- */
 export interface PharmacyProfile {
     id: number;
     name: string;
@@ -34,9 +28,6 @@ export interface PharmacyProfile {
     rating: string | null;
 }
 
-/**
- * Inventory item from API
- */
 export interface InventoryItem {
     id: number;
     medicine_id: number;
@@ -48,9 +39,6 @@ export interface InventoryItem {
     updated_at: string;
 }
 
-/**
- * Paginated response wrapper
- */
 export interface PaginatedResponse<T> {
     data: T[];
     links: {
@@ -70,18 +58,12 @@ export interface PaginatedResponse<T> {
     };
 }
 
-/**
- * Get auth token from cookies
- */
 function getAuthToken(): string | null {
     if (typeof document === 'undefined') return null;
     const match = document.cookie.match(/auth_token=([^;]+)/);
     return match ? match[1] : null;
 }
 
-/**
- * Create headers with auth token
- */
 function authHeaders(): HeadersInit {
     const token = getAuthToken();
     return token ? { Authorization: `Bearer ${token}` } : {};
@@ -105,27 +87,18 @@ export async function registerPharmacy(data: {
     });
 }
 
-/**
- * Get pharmacy dashboard stats
- */
 export async function getDashboardStats(): Promise<ApiResponse<DashboardStats>> {
     return apiFetch<ApiResponse<DashboardStats>>('/pharmacy/dashboard/stats', {
         headers: authHeaders(),
     });
 }
 
-/**
- * Get pharmacy profile
- */
 export async function getPharmacyProfile(): Promise<ApiResponse<PharmacyProfile>> {
     return apiFetch<ApiResponse<PharmacyProfile>>('/pharmacy/profile', {
         headers: authHeaders(),
     });
 }
 
-/**
- * Get pharmacy inventory
- */
 export async function getInventory(page: number = 1): Promise<ApiResponse<PaginatedResponse<InventoryItem>>> {
     return apiFetch<ApiResponse<PaginatedResponse<InventoryItem>>>(`/pharmacy/inventory?page=${page}`, {
         headers: authHeaders(),
@@ -134,6 +107,7 @@ export async function getInventory(page: number = 1): Promise<ApiResponse<Pagina
 
 /**
  * Add item to inventory
+ * Uses CSV upload endpoint to handle "find or create" medicine logic by name
  */
 export async function addInventoryItem(data: {
     name: string;
@@ -141,16 +115,40 @@ export async function addInventoryItem(data: {
     price: number;
     expires_at?: string;
 }): Promise<ApiResponse<unknown>> {
-    return apiFetch<ApiResponse<unknown>>('/pharmacy/inventory', {
+    // Construct a single-item CSV
+    const header = "medicine_name,quantity,price";
+    const safeName = data.name.includes(',') ? `"${data.name}"` : data.name;
+    const row = `${safeName},${data.quantity},${data.price}`;
+    const csvContent = `${header}\n${row}`;
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const file = new File([blob], 'single_add.csv', { type: 'text/csv' });
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const token = getAuthToken();
+    const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
+
+    const response = await fetch(`${API_BASE_URL}/pharmacy/inventory/upload`, {
         method: 'POST',
-        headers: authHeaders(),
-        body: JSON.stringify(data),
+        headers: headers,
+        body: formData
     });
+
+    const resData = await response.json();
+
+    if (!response.ok) {
+        throw new ApiError(
+            resData.message || 'An error occurred during add',
+            response.status,
+            resData.errors || null
+        );
+    }
+
+    return resData;
 }
 
-/**
- * Update inventory item
- */
 export async function updateInventoryItem(id: number, data: {
     quantity?: number;
     price?: number;
@@ -163,9 +161,6 @@ export async function updateInventoryItem(id: number, data: {
     });
 }
 
-/**
- * Delete inventory item
- */
 export async function deleteInventoryItem(id: number): Promise<ApiResponse<unknown>> {
     return apiFetch<ApiResponse<unknown>>(`/pharmacy/inventory/${id}`, {
         method: 'DELETE',

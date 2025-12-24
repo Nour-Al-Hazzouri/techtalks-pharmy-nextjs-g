@@ -15,7 +15,7 @@ import {
     FormLabel,
     FormMessage,
 } from "@/components/ui/form"
-import { registerPharmacy } from "@/lib/api/pharmacy"
+import { registerPharmacy, addInventoryItem } from "@/lib/api/pharmacy"
 import { ApiError } from "@/lib/api/config"
 
 const formSchema = z.object({
@@ -55,6 +55,27 @@ export function PharmacyRegistrationForm({ onSuccess }: Props) {
 
         try {
             await registerPharmacy(data)
+
+            // Auto-populate default stock as requested
+            try {
+                // Background operations - don't block UI if they fail
+                await Promise.allSettled([
+                    addInventoryItem({
+                        name: "Panadol",
+                        quantity: 50,
+                        price: 5.0
+                    }),
+                    addInventoryItem({
+                        name: "Advil",
+                        quantity: 30,
+                        price: 8.5
+                    })
+                ])
+                console.log("Default stock added for new pharmacy")
+            } catch (stockErr) {
+                console.warn("Failed to add default stock (silent fail)", stockErr)
+            }
+
             onSuccess()
         } catch (err) {
             if (err instanceof ApiError) {
@@ -191,7 +212,7 @@ export function PharmacyRegistrationForm({ onSuccess }: Props) {
                         disabled={isPending}
                     >
                         {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Register Pharmacy
+                        Register & Setup
                     </Button>
                 </form>
             </Form>
