@@ -9,6 +9,8 @@ import {
     Package,
     Upload,
     Loader2,
+    Star,
+    Flag,
 } from "lucide-react"
 import { DashboardStatsCard } from "./DashboardStatsCard"
 import { QuickActionCard } from "./QuickActionCard"
@@ -99,6 +101,21 @@ export function DashboardContent() {
                     value={stats?.out_of_stock ?? 0}
                     icon={<TrendingDown className="h-5 w-5 text-red-500" />}
                     iconBgColor="bg-red-50"
+                />
+            </div>
+
+            <div className="grid grid-cols-2 lg:grid-cols-2 gap-4 mb-8">
+                <DashboardStatsCard
+                    title="Average Rating"
+                    value={stats?.average_rating ? Number(stats.average_rating).toFixed(1) : "N/A"}
+                    icon={<Star className="h-5 w-5 text-yellow-500" />}
+                    iconBgColor="bg-yellow-50"
+                />
+                <DashboardStatsCard
+                    title="Total Reports"
+                    value={stats?.total_reports ?? 0}
+                    icon={<Flag className="h-5 w-5 text-purple-600" />}
+                    iconBgColor="bg-purple-50"
                 />
             </div>
 

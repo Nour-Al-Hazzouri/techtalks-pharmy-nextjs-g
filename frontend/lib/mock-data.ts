@@ -1,22 +1,23 @@
 
 export interface MedicineStock {
     name: string
+    generic_name?: string
+    category?: string
+    description?: string
     stock: "In Stock" | "Low Stock" | "Out of Stock"
-    quantity: string
+    quantity: string | number
+    expires_at?: string
 }
 
 export interface Pharmacy {
     id: string
     name: string
     address: string;
-    distance: string
     rating: number
     phone: string
-    status: "Open" | "Closing soon" | "Closed"
-    closingTime?: string
+    license_number?: string
+    verification_status?: string
     coordinates: [number, number] // [lat, lng]
-    email?: string
-    workingHours?: string
     availability?: MedicineStock[]
 }
 

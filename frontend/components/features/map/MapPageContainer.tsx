@@ -26,19 +26,22 @@ const PharmacyMap = dynamic(
     }
 )
 
-function mapApiToPharmacy(p: PublicPharmacy, medicineName?: string): Pharmacy {
+function mapApiToPharmacy(p: PublicPharmacy, medicine?: { name: string, generic_name: string, category: string, description: string }): Pharmacy {
     return {
         id: String(p.id),
         name: p.name,
         address: p.address,
-        distance: p.distance || "2.5 km", // Mock distance if not calculated
         rating: p.rating ? parseFloat(p.rating) : 4.5,
         phone: p.phone,
-        status: "Open", // Default
+        license_number: p.license_number,
+        verification_status: p.verification_status,
         coordinates: [parseFloat(p.latitude), parseFloat(p.longitude)],
-        availability: medicineName ? [
+        availability: medicine ? [
             {
-                name: medicineName,
+                name: medicine.name,
+                generic_name: medicine.generic_name,
+                category: medicine.category,
+                description: medicine.description,
                 stock: "In Stock",
                 quantity: "Available"
             }
@@ -122,18 +125,21 @@ export function MapPageContainer() {
             res.data.forEach(medicine => {
                 medicine.pharmacies.forEach(p => {
                     if (!uniquePharmacies.has(String(p.id))) {
-                        uniquePharmacies.set(String(p.id), mapApiToPharmacy(p, medicine.name))
+                        uniquePharmacies.set(String(p.id), mapApiToPharmacy(p, medicine))
                     } else {
-                        // If already exists, maybe append availability?
-                        // For simplicity, we just ensure it's in the list.
-                        // Ideally we'd merge availability lists.
                         const existing = uniquePharmacies.get(String(p.id))!
                         if (existing.availability) {
-                            existing.availability.push({
-                                name: medicine.name,
-                                stock: "In Stock",
-                                quantity: "Available"
-                            })
+                            // Check if this specific medicine is already added
+                            if (!existing.availability.some(m => m.name === medicine.name)) {
+                                existing.availability.push({
+                                    name: medicine.name,
+                                    generic_name: medicine.generic_name,
+                                    category: medicine.category,
+                                    description: medicine.description,
+                                    stock: "In Stock",
+                                    quantity: "Available"
+                                })
+                            }
                         }
                     }
                 })

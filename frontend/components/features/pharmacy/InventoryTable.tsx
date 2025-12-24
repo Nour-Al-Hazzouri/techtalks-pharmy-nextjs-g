@@ -443,6 +443,9 @@ export function InventoryTable({ items, onItemsChange, onRefresh }: InventoryTab
                                 Quantity
                             </th>
                             <th className="text-left font-semibold px-4 py-3">
+                                Expiry Date
+                            </th>
+                            <th className="text-left font-semibold px-4 py-3">
                                 Last updated
                             </th>
                             <th className="text-right font-semibold px-4 py-3">
@@ -503,6 +506,9 @@ export function InventoryTable({ items, onItemsChange, onRefresh }: InventoryTab
                                             disabled={!effective.available}
                                             className="w-28"
                                         />
+                                    </td>
+                                    <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
+                                        {item.expiresAt ? new Date(item.expiresAt).toLocaleDateString() : "No Expiry"}
                                     </td>
                                     <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
                                         {effective.updatedAt}

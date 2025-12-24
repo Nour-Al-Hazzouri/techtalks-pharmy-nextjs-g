@@ -13,6 +13,7 @@ export interface InventoryDisplayItem {
     available: boolean
     quantity: number
     price: string
+    expiresAt: string | null
     updatedAt: string
 }
 
@@ -32,6 +33,7 @@ export function InventoryContent() {
                 available: item.available,
                 quantity: item.quantity,
                 price: item.price,
+                expiresAt: item.expires_at,
                 updatedAt: item.updated_at,
             }))
             setItems(inventoryItems)
