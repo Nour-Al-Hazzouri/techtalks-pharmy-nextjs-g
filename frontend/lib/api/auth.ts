@@ -4,7 +4,7 @@
  */
 
 import { apiFetch } from './config';
-import { ApiResponse, User, RegisterRequest } from './types';
+import { ApiResponse, User, RegisterRequest, LoginResponse } from './types';
 
 /**
  * Register a new user
@@ -15,5 +15,18 @@ export async function register(data: RegisterRequest): Promise<ApiResponse<User>
     return apiFetch<ApiResponse<User>>('/auth/register', {
         method: 'POST',
         body: JSON.stringify(data),
+    });
+}
+
+/**
+ * Login user
+ * @param email - User email
+ * @param password - User password
+ * @returns API response with token and user data
+ */
+export async function login(email: string, password: string): Promise<ApiResponse<LoginResponse>> {
+    return apiFetch<ApiResponse<LoginResponse>>('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email, password }),
     });
 }
