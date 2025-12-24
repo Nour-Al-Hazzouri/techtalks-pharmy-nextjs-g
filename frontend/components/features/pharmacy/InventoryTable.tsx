@@ -1,16 +1,18 @@
 "use client"
 
 import * as React from "react"
-import { Plus, Search, Save, Trash2, XCircle } from "lucide-react"
-import { MOCK_MEDICINES, type PharmacyInventoryItem } from "@/lib/mock-data"
+import { Plus, Search, Save, Trash2, XCircle, Loader2 } from "lucide-react"
 import { addRecentActivityEntries } from "@/lib/pharmacy-recent-activity"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
+import { updateInventoryItem, deleteInventoryItem, addInventoryItem } from "@/lib/api/pharmacy"
+import type { InventoryDisplayItem } from "./InventoryContent"
 
 type InventoryTableProps = {
-    items: PharmacyInventoryItem[]
-    onItemsChange: React.Dispatch<React.SetStateAction<PharmacyInventoryItem[]>>
+    items: InventoryDisplayItem[]
+    onItemsChange: React.Dispatch<React.SetStateAction<InventoryDisplayItem[]>>
+    onRefresh?: () => void
 }
 
 type PendingUpdate = {
@@ -50,20 +52,12 @@ function statusClasses(label: string) {
     }
 }
 
-function normalizeName(value: string) {
-    return value.trim().toLowerCase()
-}
-
-export function InventoryTable({ items, onItemsChange }: InventoryTableProps) {
+export function InventoryTable({ items, onItemsChange, onRefresh }: InventoryTableProps) {
     const [query, setQuery] = React.useState("")
-
     const [addQuery, setAddQuery] = React.useState("")
-    const [addSelected, setAddSelected] = React.useState<string | null>(null)
-    const [showAddResults, setShowAddResults] = React.useState(false)
+    const [saving, setSaving] = React.useState(false)
 
-    const [pending, setPending] = React.useState<Record<string, PendingUpdate>>(
-        {}
-    )
+    const [pending, setPending] = React.useState<Record<string, PendingUpdate>>({})
 
     const filtered = React.useMemo(() => {
         const q = query.trim().toLowerCase()
@@ -71,35 +65,10 @@ export function InventoryTable({ items, onItemsChange }: InventoryTableProps) {
         return items.filter((i) => i.name.toLowerCase().includes(q))
     }, [items, query])
 
-    const addResults = React.useMemo(() => {
-        const q = normalizeName(addQuery)
-        if (!q) return []
-
-        const existing = new Set(items.map((i) => normalizeName(i.name)))
-
-        return MOCK_MEDICINES.filter((m) => {
-            const key = normalizeName(m)
-            return key.includes(q) && !existing.has(key)
-        }).slice(0, 8)
-    }, [addQuery, items])
-
-    const canAdd = React.useMemo(() => {
-        const term = addSelected ?? addQuery
-        const normalized = normalizeName(term)
-        if (!normalized) return false
-
-        const match = MOCK_MEDICINES.find(
-            (m) => normalizeName(m) === normalized
-        )
-        if (!match) return false
-
-        return !items.some((i) => normalizeName(i.name) === normalizeName(match))
-    }, [addQuery, addSelected, items])
-
     const pendingCount = Object.keys(pending).length
 
     const getEffective = React.useCallback(
-        (item: PharmacyInventoryItem) => {
+        (item: InventoryDisplayItem) => {
             const p = pending[item.id]
             if (!p) return item
             return { ...item, ...p }
@@ -118,8 +87,7 @@ export function InventoryTable({ items, onItemsChange }: InventoryTableProps) {
             setPending((prev) => {
                 const current = prev[id]
                 const base = current ?? {
-                    available:
-                        items.find((i) => i.id === id)?.available ?? false,
+                    available: items.find((i) => i.id === id)?.available ?? false,
                     quantity: items.find((i) => i.id === id)?.quantity ?? 0,
                 }
 
@@ -167,11 +135,32 @@ export function InventoryTable({ items, onItemsChange }: InventoryTableProps) {
         setPending({})
     }
 
-    const handleSave = () => {
+    const handleSave = async () => {
         const now = new Date().toISOString()
-
         const ids = Object.keys(pending)
-        if (ids.length > 0) {
+
+        if (ids.length === 0) return
+
+        setSaving(true)
+
+        try {
+            // Save each pending update to the API
+            for (const id of ids) {
+                const item = items.find((i) => i.id === id)
+                const update = pending[id]
+
+                if (!item || !update) continue
+
+                // Extract the numeric ID from the string (e.g., "inv-123" -> 123)
+                const numericId = parseInt(id.replace('inv-', ''), 10)
+
+                await updateInventoryItem(numericId, {
+                    quantity: update.quantity,
+                    available: update.available,
+                })
+            }
+
+            // Log activity entries
             const entries = ids
                 .map((id) => {
                     const initial = items.find((i) => i.id === id)
@@ -206,9 +195,7 @@ export function InventoryTable({ items, onItemsChange }: InventoryTableProps) {
                     }
                 })
                 .filter(
-                    (
-                        entry
-                    ): entry is {
+                    (entry): entry is {
                         medicineName: string
                         action: string
                         status: "in_stock" | "low_stock" | "out_of_stock"
@@ -216,70 +203,82 @@ export function InventoryTable({ items, onItemsChange }: InventoryTableProps) {
                 )
 
             if (entries.length > 0) addRecentActivityEntries(entries, now)
+
+            // Update local state
+            onItemsChange((prev) =>
+                prev.map((item) => {
+                    const update = pending[item.id]
+                    if (!update) return item
+                    return {
+                        ...item,
+                        available: update.available,
+                        quantity: normalizeQuantity(update.quantity),
+                        updatedAt: now,
+                    }
+                })
+            )
+
+            setPending({})
+
+            // Refresh data from server
+            if (onRefresh) onRefresh()
+        } catch (error) {
+            console.error("Failed to save inventory updates:", error)
+            alert("Failed to save changes. Please try again.")
+        } finally {
+            setSaving(false)
         }
-
-        onItemsChange((prev) =>
-            prev.map((item) => {
-                const update = pending[item.id]
-                if (!update) return item
-                return {
-                    ...item,
-                    available: update.available,
-                    quantity: normalizeQuantity(update.quantity),
-                    updatedAt: now,
-                }
-            })
-        )
-
-        console.log("[pharmacy][inventory] save", {
-            updates: ids.map((id) => ({ id, ...pending[id] })),
-        })
-
-        setPending({})
     }
 
-    const handleAdd = () => {
-        const term = addSelected ?? addQuery.trim()
+    const handleAdd = async () => {
+        const term = addQuery.trim()
         if (!term) return
 
-        const match = MOCK_MEDICINES.find(
-            (m) => normalizeName(m) === normalizeName(term)
-        )
-        if (!match) return
+        setSaving(true)
 
-        const exists = items.some((i) => normalizeName(i.name) === normalizeName(match))
-        if (exists) return
-
-        const now = new Date().toISOString()
-
-        onItemsChange((prev) => [
-            ...prev,
-            {
-                id: `med-${Date.now()}-${Math.random().toString(16).slice(2)}`,
-                name: match,
-                available: true,
+        try {
+            await addInventoryItem({
+                name: term,
                 quantity: 0,
-                updatedAt: now,
-            },
-        ])
+                price: 0,
+            })
 
-        setAddQuery("")
-        setAddSelected(null)
-        setShowAddResults(false)
+            setAddQuery("")
+
+            // Refresh to get the new item
+            if (onRefresh) onRefresh()
+        } catch (error) {
+            console.error("Failed to add item:", error)
+            alert("Failed to add item. Please try again.")
+        } finally {
+            setSaving(false)
+        }
     }
 
-    const handleRemove = (id: string) => {
+    const handleRemove = async (id: string) => {
         const item = items.find((i) => i.id === id)
         if (!item) return
 
         const ok = window.confirm(`Remove ${item.name} from inventory?`)
         if (!ok) return
 
-        onItemsChange((prev) => prev.filter((i) => i.id !== id))
-        setPending((prev) => {
-            const { [id]: _, ...rest } = prev
-            return rest
-        })
+        setSaving(true)
+
+        try {
+            const numericId = parseInt(id.replace('inv-', ''), 10)
+            await deleteInventoryItem(numericId)
+
+            onItemsChange((prev) => prev.filter((i) => i.id !== id))
+            setPending((prev) => {
+                const { [id]: _, ...rest } = prev
+                return rest
+            })
+        } catch (error) {
+            console.error("Failed to remove item:", error)
+            alert("Failed to remove item. Please try again.")
+        } finally {
+            setSaving(false)
+        }
     }
 
     return (
@@ -295,51 +294,21 @@ export function InventoryTable({ items, onItemsChange }: InventoryTableProps) {
                         />
                     </div>
 
-                    <div className="relative flex items-center gap-2">
+                    <div className="flex items-center gap-2">
                         <Plus className="h-4 w-4 text-gray-400" />
                         <Input
                             value={addQuery}
-                            onChange={(e) => {
-                                setAddQuery(e.target.value)
-                                setAddSelected(null)
-                                setShowAddResults(true)
-                            }}
-                            onFocus={() => {
-                                if (addQuery.trim().length > 0) setShowAddResults(true)
-                            }}
-                            onBlur={() => {
-                                setTimeout(() => setShowAddResults(false), 150)
-                            }}
-                            placeholder="Add medicine from list..."
+                            onChange={(e) => setAddQuery(e.target.value)}
+                            placeholder="Add medicine by name..."
                         />
                         <Button
                             type="button"
                             variant="outline"
                             onClick={handleAdd}
-                            disabled={!canAdd}
+                            disabled={!addQuery.trim() || saving}
                         >
-                            Add
+                            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Add"}
                         </Button>
-
-                        {showAddResults && addResults.length > 0 && (
-                            <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-lg border border-gray-100 z-50 max-h-56 overflow-y-auto">
-                                {addResults.map((result) => (
-                                    <button
-                                        key={result}
-                                        type="button"
-                                        className="w-full text-left px-4 py-3 hover:bg-gray-50 text-gray-700 text-sm transition-colors border-b border-gray-50 last:border-0"
-                                        onMouseDown={(e) => e.preventDefault()}
-                                        onClick={() => {
-                                            setAddSelected(result)
-                                            setAddQuery(result)
-                                            setShowAddResults(false)
-                                        }}
-                                    >
-                                        {result}
-                                    </button>
-                                ))}
-                            </div>
-                        )}
                     </div>
                 </div>
 
@@ -353,13 +322,13 @@ export function InventoryTable({ items, onItemsChange }: InventoryTableProps) {
                     <Button
                         variant="outline"
                         onClick={handleDiscard}
-                        disabled={pendingCount === 0}
+                        disabled={pendingCount === 0 || saving}
                     >
                         <XCircle className="h-4 w-4" />
                         Discard
                     </Button>
-                    <Button onClick={handleSave} disabled={pendingCount === 0}>
-                        <Save className="h-4 w-4" />
+                    <Button onClick={handleSave} disabled={pendingCount === 0 || saving}>
+                        {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                         Save
                     </Button>
                 </div>
@@ -439,6 +408,7 @@ export function InventoryTable({ items, onItemsChange }: InventoryTableProps) {
                                     variant="outline"
                                     onClick={() => handleRemove(item.id)}
                                     className="w-full"
+                                    disabled={saving}
                                 >
                                     <Trash2 className="h-4 w-4" />
                                     Remove
@@ -450,7 +420,7 @@ export function InventoryTable({ items, onItemsChange }: InventoryTableProps) {
 
                 {filtered.length === 0 && (
                     <div className="rounded-xl border border-gray-100 bg-white p-8 text-center text-sm text-gray-500">
-                        No medicines match your search.
+                        No medicines in your inventory.
                     </div>
                 )}
             </div>
@@ -515,9 +485,7 @@ export function InventoryTable({ items, onItemsChange }: InventoryTableProps) {
                                                 }
                                             />
                                             <span className="text-gray-600">
-                                                {effective.available
-                                                    ? "Yes"
-                                                    : "No"}
+                                                {effective.available ? "Yes" : "No"}
                                             </span>
                                         </div>
                                     </td>
@@ -544,6 +512,7 @@ export function InventoryTable({ items, onItemsChange }: InventoryTableProps) {
                                             type="button"
                                             variant="outline"
                                             onClick={() => handleRemove(item.id)}
+                                            disabled={saving}
                                         >
                                             <Trash2 className="h-4 w-4" />
                                             Remove
@@ -558,7 +527,7 @@ export function InventoryTable({ items, onItemsChange }: InventoryTableProps) {
                                     className="px-4 py-10 text-center text-gray-500"
                                     colSpan={6}
                                 >
-                                    No medicines match your search.
+                                    No medicines in your inventory.
                                 </td>
                             </tr>
                         )}

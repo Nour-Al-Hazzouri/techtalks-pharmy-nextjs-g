@@ -1,17 +1,73 @@
 "use client"
 
 import * as React from "react"
-import { MOCK_PHARMACY_INVENTORY } from "@/lib/mock-data"
+import { Loader2 } from "lucide-react"
 import { InventoryTable } from "@/components/features/pharmacy/InventoryTable"
+import { getInventory, type InventoryItem, type PaginatedResponse } from "@/lib/api/pharmacy"
+
+export interface InventoryDisplayItem {
+    id: string
+    medicineId: number
+    name: string
+    available: boolean
+    quantity: number
+    price: string
+    updatedAt: string
+}
 
 export function InventoryContent() {
-    const [items, setItems] = React.useState(() => MOCK_PHARMACY_INVENTORY)
+    const [items, setItems] = React.useState<InventoryDisplayItem[]>([])
+    const [loading, setLoading] = React.useState(true)
+    const [error, setError] = React.useState<string | null>(null)
+
+    const fetchInventory = React.useCallback(async () => {
+        try {
+            setLoading(true)
+            const response = await getInventory()
+            const inventoryItems = response.data.data.map((item: InventoryItem) => ({
+                id: `inv-${item.id}`,
+                medicineId: item.medicine_id,
+                name: item.medicine_name,
+                available: item.available,
+                quantity: item.quantity,
+                price: item.price,
+                updatedAt: item.updated_at,
+            }))
+            setItems(inventoryItems)
+        } catch (err) {
+            console.error("Failed to fetch inventory:", err)
+            setError("Failed to load inventory")
+        } finally {
+            setLoading(false)
+        }
+    }, [])
+
+    React.useEffect(() => {
+        fetchInventory()
+    }, [fetchInventory])
 
     const total = items.length
     const available = items.filter((i) => i.available).length
     const unavailable = total - available
-    const lowStock = items.filter((i) => i.available && i.quantity > 0 && i.quantity <= 5)
-        .length
+    const lowStock = items.filter((i) => i.available && i.quantity > 0 && i.quantity <= 5).length
+
+    if (loading) {
+        return (
+            <div className="flex-1 bg-gray-50 px-4 py-4 pt-20 pb-24 md:p-6 md:pt-6 md:pb-6 flex items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-[#E91E63]" />
+            </div>
+        )
+    }
+
+    if (error) {
+        return (
+            <div className="flex-1 bg-gray-50 px-4 py-4 pt-20 pb-24 md:p-6 md:pt-6 md:pb-6">
+                <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700">
+                    {error}
+                </div>
+            </div>
+        )
+    }
 
     return (
         <div className="flex-1 bg-gray-50 px-4 py-4 pt-20 pb-24 md:p-6 md:pt-6 md:pb-6 overflow-auto">
@@ -49,7 +105,7 @@ export function InventoryContent() {
                 </div>
             </div>
 
-            <InventoryTable items={items} onItemsChange={setItems} />
+            <InventoryTable items={items} onItemsChange={setItems} onRefresh={fetchInventory} />
         </div>
     )
 }

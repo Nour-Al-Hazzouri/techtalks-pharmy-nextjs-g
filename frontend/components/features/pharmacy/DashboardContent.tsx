@@ -8,31 +8,64 @@ import {
     TrendingDown,
     Package,
     Upload,
+    Loader2,
 } from "lucide-react"
 import { DashboardStatsCard } from "./DashboardStatsCard"
 import { QuickActionCard } from "./QuickActionCard"
 import { RecentActivityList, type ActivityItem } from "./RecentActivityList"
-import { MOCK_DASHBOARD_STATS, MOCK_RECENT_ACTIVITY } from "@/lib/mock-data"
+import { getDashboardStats, type DashboardStats } from "@/lib/api/pharmacy"
 import {
     getStoredRecentActivity,
     hydrateRelativeTimestamps,
 } from "@/lib/pharmacy-recent-activity"
 
 export function DashboardContent() {
-    const stats = MOCK_DASHBOARD_STATS
-    const [activities, setActivities] = React.useState<ActivityItem[]>(() =>
-        MOCK_RECENT_ACTIVITY
-    )
+    const [stats, setStats] = React.useState<DashboardStats | null>(null)
+    const [loading, setLoading] = React.useState(true)
+    const [error, setError] = React.useState<string | null>(null)
+    const [activities, setActivities] = React.useState<ActivityItem[]>([])
+
+    React.useEffect(() => {
+        async function fetchStats() {
+            try {
+                setLoading(true)
+                const response = await getDashboardStats()
+                setStats(response.data)
+            } catch (err) {
+                console.error("Failed to fetch dashboard stats:", err)
+                setError("Failed to load dashboard stats")
+            } finally {
+                setLoading(false)
+            }
+        }
+
+        fetchStats()
+    }, [])
 
     React.useEffect(() => {
         const stored = getStoredRecentActivity()
         if (stored.length > 0) {
             setActivities(hydrateRelativeTimestamps(stored))
-            return
         }
-
-        setActivities(MOCK_RECENT_ACTIVITY)
     }, [])
+
+    if (loading) {
+        return (
+            <div className="flex-1 bg-gray-50 px-4 py-4 pt-20 pb-24 md:p-6 md:pt-6 md:pb-6 flex items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-[#E91E63]" />
+            </div>
+        )
+    }
+
+    if (error) {
+        return (
+            <div className="flex-1 bg-gray-50 px-4 py-4 pt-20 pb-24 md:p-6 md:pt-6 md:pb-6">
+                <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700">
+                    {error}
+                </div>
+            </div>
+        )
+    }
 
     return (
         <div className="flex-1 bg-gray-50 px-4 py-4 pt-20 pb-24 md:p-6 md:pt-6 md:pb-6 overflow-auto">
@@ -40,25 +73,25 @@ export function DashboardContent() {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                 <DashboardStatsCard
                     title="Total Medicines"
-                    value={stats.totalMedicines}
+                    value={stats?.total_medicines ?? 0}
                     icon={<Pill className="h-5 w-5 text-green-600" />}
                     iconBgColor="bg-green-50"
                 />
                 <DashboardStatsCard
                     title="In Stock"
-                    value={stats.inStock}
+                    value={stats?.total_available ?? 0}
                     icon={<CheckCircle className="h-5 w-5 text-green-600" />}
                     iconBgColor="bg-green-50"
                 />
                 <DashboardStatsCard
                     title="Low Stock"
-                    value={stats.lowStock}
+                    value={stats?.low_stock_count ?? 0}
                     icon={<AlertTriangle className="h-5 w-5 text-amber-500" />}
                     iconBgColor="bg-amber-50"
                 />
                 <DashboardStatsCard
                     title="Out of Stock"
-                    value={stats.outOfStock}
+                    value={stats?.out_of_stock ?? 0}
                     icon={<TrendingDown className="h-5 w-5 text-red-500" />}
                     iconBgColor="bg-red-50"
                 />
