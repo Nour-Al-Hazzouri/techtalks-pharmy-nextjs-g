@@ -23,13 +23,16 @@ export default function PharmacyLayout({
             setPharmacy(response.data)
             setNeedsRegistration(false)
         } catch (error) {
-            console.error("Failed to fetch pharmacy profile:", error)
             // Check if it's a 404 (Not Found) or 400 with specific message
             // The backend might return 404 if no pharmacy exists for this user
-            if (error instanceof ApiError) {
-                if (error.status === 404 || error.message.includes("not found")) {
-                    setNeedsRegistration(true)
-                }
+            const isNotFound = error instanceof ApiError && (error.status === 404 || error.message.includes("not found"));
+
+            if (!isNotFound) {
+                console.error("Failed to fetch pharmacy profile:", error)
+            }
+
+            if (isNotFound) {
+                setNeedsRegistration(true)
             }
         } finally {
             setLoading(false)

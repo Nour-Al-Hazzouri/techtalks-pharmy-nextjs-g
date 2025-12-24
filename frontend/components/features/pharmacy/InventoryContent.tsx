@@ -4,6 +4,7 @@ import * as React from "react"
 import { Loader2 } from "lucide-react"
 import { InventoryTable } from "@/components/features/pharmacy/InventoryTable"
 import { getInventory, type InventoryItem, type PaginatedResponse } from "@/lib/api/pharmacy"
+import { ApiError } from "@/lib/api/config"
 
 export interface InventoryDisplayItem {
     id: string
@@ -35,7 +36,11 @@ export function InventoryContent() {
             }))
             setItems(inventoryItems)
         } catch (err) {
-            console.error("Failed to fetch inventory:", err)
+            // Only log unexpected errors to console
+            const isNotFound = err instanceof ApiError && (err.status === 404 || err.message.includes("not found"));
+            if (!isNotFound) {
+                console.error("Failed to fetch inventory:", err)
+            }
             setError("Failed to load inventory")
         } finally {
             setLoading(false)

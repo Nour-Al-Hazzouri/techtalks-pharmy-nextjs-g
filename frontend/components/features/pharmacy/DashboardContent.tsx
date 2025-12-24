@@ -14,6 +14,7 @@ import { DashboardStatsCard } from "./DashboardStatsCard"
 import { QuickActionCard } from "./QuickActionCard"
 import { RecentActivityList, type ActivityItem } from "./RecentActivityList"
 import { getDashboardStats, type DashboardStats } from "@/lib/api/pharmacy"
+import { ApiError } from "@/lib/api/config"
 import {
     getStoredRecentActivity,
     hydrateRelativeTimestamps,
@@ -32,7 +33,11 @@ export function DashboardContent() {
                 const response = await getDashboardStats()
                 setStats(response.data)
             } catch (err) {
-                console.error("Failed to fetch dashboard stats:", err)
+                // Only log unexpected errors to console
+                const isNotFound = err instanceof ApiError && (err.status === 404 || err.message.includes("not found"));
+                if (!isNotFound) {
+                    console.error("Failed to fetch dashboard stats:", err)
+                }
                 setError("Failed to load dashboard stats")
             } finally {
                 setLoading(false)
