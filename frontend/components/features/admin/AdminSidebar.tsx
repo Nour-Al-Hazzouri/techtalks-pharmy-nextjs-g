@@ -11,6 +11,7 @@ import {
     Package,
     LogOut,
     ChevronRight,
+    MessageSquare,
 } from "lucide-react"
 
 interface NavItem {
@@ -23,12 +24,14 @@ const navItems: NavItem[] = [
     { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
     { label: "Verify Pharmacies", href: "/admin/verify", icon: ShieldCheck },
     { label: "Manage Catalog", href: "/admin/catalog", icon: Package },
+    { label: "User Reports", href: "/admin/reports", icon: MessageSquare },
 ]
 
 const mobileLabels: Record<string, string> = {
     "/admin": "Dashboard",
     "/admin/verify": "Verify",
     "/admin/catalog": "Catalog",
+    "/admin/reports": "Reports",
 }
 
 export function AdminSidebar() {
@@ -136,7 +139,7 @@ export function AdminSidebar() {
 
             {/* Mobile Bottom Navigation */}
             <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-100">
-                <ul className="grid grid-cols-3">
+                <ul className="grid grid-cols-4">
                     {navItems.map((item) => {
                         const isActive = mounted ? pathname === item.href : false
                         const Icon = item.icon
