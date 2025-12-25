@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Search, MapPin, Phone, X, CheckCircle, Eye, ChevronLeft, XCircle, Loader2, Shield, FileText, Building2, Calendar, ShieldCheck, ShieldAlert, ExternalLink, Mail, User, AlertCircle } from "lucide-react"
+import { Search, MapPin, Phone, X, CheckCircle, Eye, ChevronLeft, XCircle, Loader2, Shield, FileText, Building2, Calendar, ShieldCheck, ShieldAlert, ExternalLink, Mail, User, AlertCircle, ZoomIn, ZoomOut, RotateCcw, Maximize2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 // Helper to map API data
 import { getPharmacies } from "@/lib/api/public"
@@ -26,15 +26,115 @@ interface Document {
 
 // Removed MOCK_PHARMACIES constant
 
+interface DocumentViewerModalProps {
+    document: Document | null
+    onClose: () => void
+}
+
+function DocumentViewerModal({ document, onClose }: DocumentViewerModalProps) {
+    const [scale, setScale] = React.useState(1)
+    const [position, setPosition] = React.useState({ x: 0, y: 0 })
+    const [isDragging, setIsDragging] = React.useState(false)
+    const [dragStart, setDragStart] = React.useState({ x: 0, y: 0 })
+
+    if (!document) return null
+
+    const handleZoomIn = () => setScale(prev => Math.min(prev + 0.25, 4))
+    const handleZoomOut = () => setScale(prev => Math.max(prev - 0.25, 0.5))
+    const handleReset = () => {
+        setScale(1)
+        setPosition({ x: 0, y: 0 })
+    }
+
+    const handleMouseDown = (e: React.MouseEvent) => {
+        setIsDragging(true)
+        setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y })
+    }
+
+    const handleMouseMove = (e: React.MouseEvent) => {
+        if (!isDragging) return
+        setPosition({
+            x: e.clientX - dragStart.x,
+            y: e.clientY - dragStart.y
+        })
+    }
+
+    const handleMouseUp = () => setIsDragging(false)
+
+    const isImage = /\.(jpg|jpeg|png)$/i.test(document.url)
+
+    return (
+        <div className="fixed inset-0 z-[110] bg-black/90 backdrop-blur-md flex flex-col animate-in fade-in duration-300">
+            {/* Header */}
+            <div className="p-4 flex items-center justify-between border-b border-white/10 bg-black/40 text-white">
+                <div className="flex items-center gap-3">
+                    <FileText className="h-5 w-5 text-gray-400" />
+                    <div>
+                        <p className="text-sm font-bold">{document.name}</p>
+                        <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Document Viewer</p>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-4">
+                    {isImage && (
+                        <div className="flex items-center bg-white/10 rounded-xl p-1 gap-1">
+                            <button onClick={handleZoomOut} className="p-2 hover:bg-white/10 rounded-lg transition-colors"><ZoomOut className="h-4 w-4" /></button>
+                            <span className="text-[10px] font-bold w-12 text-center">{Math.round(scale * 100)}%</span>
+                            <button onClick={handleZoomIn} className="p-2 hover:bg-white/10 rounded-lg transition-colors"><ZoomIn className="h-4 w-4" /></button>
+                            <div className="w-px h-4 bg-white/10 mx-1" />
+                            <button onClick={handleReset} title="Reset View" className="p-2 hover:bg-white/10 rounded-lg transition-colors"><RotateCcw className="h-4 w-4" /></button>
+                        </div>
+                    )}
+                    <button onClick={onClose} className="p-2 bg-white/10 hover:bg-red-500 rounded-xl transition-all">
+                        <X className="h-5 w-5" />
+                    </button>
+                </div>
+            </div>
+
+            {/* Viewer Area */}
+            <div
+                className="flex-1 overflow-hidden relative flex items-center justify-center cursor-grab active:cursor-grabbing"
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+                onMouseDown={handleMouseDown}
+            >
+                {isImage ? (
+                    <img
+                        src={document.url}
+                        alt={document.name}
+                        className="max-h-full transition-transform duration-75 ease-out select-none shadow-2xl"
+                        style={{
+                            transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
+                        }}
+                        draggable={false}
+                    />
+                ) : (
+                    <iframe
+                        src={document.url}
+                        className="w-full h-full border-none bg-white"
+                        title={document.name}
+                    />
+                )}
+            </div>
+
+            <div className="p-4 bg-black/40 text-center text-white/40 text-[10px] font-medium uppercase tracking-[0.2em]">
+                {isImage ? "Drag to pan • Use controls to zoom" : "Previewing PDF document"}
+            </div>
+        </div>
+    )
+}
+
 interface ReviewModalProps {
     pharmacy: Pharmacy | null
     isOpen: boolean
     onClose: () => void
     onApprove: (id: string) => void
     onReject: (id: string) => void
+    onViewDocument: (doc: Document) => void
 }
 
-function ReviewModal({ pharmacy, isOpen, onClose, onApprove, onReject }: ReviewModalProps) {
+function ReviewModal({ pharmacy, isOpen, onClose, onApprove, onReject, onViewDocument }: ReviewModalProps) {
     if (!isOpen || !pharmacy) return null
 
     return (
@@ -112,14 +212,12 @@ function ReviewModal({ pharmacy, isOpen, onClose, onApprove, onReject }: ReviewM
                                                 <p className="text-[10px] text-gray-400 font-medium">Official accreditation file</p>
                                             </div>
                                         </div>
-                                        <a
-                                            href={doc.url}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="h-9 w-9 rounded-xl flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-900 transition-all"
+                                        <button
+                                            onClick={() => onViewDocument(doc)}
+                                            className="h-9 w-9 rounded-xl flex items-center justify-center text-[#E91E63] bg-pink-50 hover:bg-pink-100 transition-all shadow-sm"
                                         >
-                                            <ExternalLink className="h-4 w-4" />
-                                        </a>
+                                            <Maximize2 className="h-4 w-4" />
+                                        </button>
                                     </div>
                                 ))
                             ) : (
@@ -164,6 +262,7 @@ export function VerifyPharmaciesContent() {
     const [selectedPharmacy, setSelectedPharmacy] = React.useState<Pharmacy | null>(null)
     const [pharmacies, setPharmacies] = React.useState<Pharmacy[]>([])
     const [loading, setLoading] = React.useState(true)
+    const [viewingDocument, setViewingDocument] = React.useState<Document | null>(null)
 
     React.useEffect(() => {
         const fetchPending = async () => {
@@ -309,6 +408,12 @@ export function VerifyPharmaciesContent() {
                 onClose={() => setSelectedPharmacy(null)}
                 onApprove={handleApprove}
                 onReject={handleReject}
+                onViewDocument={(doc) => setViewingDocument(doc)}
+            />
+
+            <DocumentViewerModal
+                document={viewingDocument}
+                onClose={() => setViewingDocument(null)}
             />
         </div>
     )
