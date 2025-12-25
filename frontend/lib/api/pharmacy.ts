@@ -24,7 +24,7 @@ export interface PharmacyProfile {
     license_number: string;
     latitude: string;
     longitude: string;
-    verification_status: 'pending' | 'verified' | 'rejected';
+    verification_status: 'incomplete' | 'pending' | 'verified' | 'rejected';
     rating: string | null;
 }
 
@@ -155,5 +155,63 @@ export async function updateInventoryItem(id: number, data: {
 export async function deleteInventoryItem(id: number): Promise<ApiResponse<unknown>> {
     return apiFetch<ApiResponse<unknown>>(`/pharmacy/inventory/${id}`, {
         method: 'DELETE',
+    });
+}
+
+/**
+ * Upload a pharmacy document
+ */
+export async function uploadPharmacyDocument(docType: string, file: File): Promise<ApiResponse<any>> {
+    const formData = new FormData();
+    formData.append('doc_type', docType);
+    formData.append('file', file);
+
+    const match = document.cookie.match(/auth_token=([^;]+)/);
+    const token = match ? match[1] : null;
+
+    const response = await fetch(`${API_BASE_URL}/pharmacy/documents`, {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: formData,
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+        throw new ApiError(data.message || 'Upload failed', response.status);
+    }
+    return data;
+}
+
+/**
+ * Get pharmacy documents
+ */
+export async function getMyDocuments(): Promise<ApiResponse<any[]>> {
+    return apiFetch<ApiResponse<any[]>>('/pharmacy/documents');
+}
+
+/**
+ * Delete a pharmacy document
+ */
+export async function deletePharmacyDocument(id: number | string): Promise<ApiResponse<any>> {
+    return apiFetch<ApiResponse<any>>(`/pharmacy/documents/${id}`, {
+        method: 'DELETE'
+    });
+}
+
+/**
+ * Submit pharmacy for verification
+ */
+export async function submitForVerification(): Promise<ApiResponse<any>> {
+    return apiFetch<ApiResponse<any>>('/pharmacy/submit-verification', {
+        method: 'POST'
+    });
+}
+
+/**
+ * Cancel pharmacy verification submission
+ */
+export async function cancelVerificationSubmission(): Promise<ApiResponse<any>> {
+    return apiFetch<ApiResponse<any>>('/pharmacy/cancel-verification', {
+        method: 'POST'
     });
 }

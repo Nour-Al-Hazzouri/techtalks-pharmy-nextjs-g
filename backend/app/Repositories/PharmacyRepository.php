@@ -21,6 +21,11 @@ class PharmacyRepository
             }
         }
 
+        if (isset($filters['status'])) {
+            $query->where('verification_status', $filters['status'])
+                  ->with('documents');
+        }
+
         return $query->paginate(10);
     }
 
@@ -50,7 +55,7 @@ class PharmacyRepository
 
     public function getAdminList(): LengthAwarePaginator
     {
-        return Pharmacy::with('pharmacist')->paginate(10);
+        return Pharmacy::with(['pharmacist', 'documents'])->paginate(10);
     }
     
     public function getTopRated(): Collection

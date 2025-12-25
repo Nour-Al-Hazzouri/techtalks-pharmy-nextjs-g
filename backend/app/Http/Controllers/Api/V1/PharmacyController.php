@@ -28,6 +28,9 @@ class PharmacyController extends Controller
             if ($request->has('verified')) {
                 $filters['verified'] = $request->input('verified');
             }
+            if ($request->has('status')) {
+                $filters['status'] = $request->input('status');
+            }
 
             $pharmacies = $this->pharmacyService->getAllPharmacies($filters);
             return $this->successResponse('Pharmacies list', PharmacyResource::collection($pharmacies)->response()->getData(true));
@@ -134,6 +137,33 @@ class PharmacyController extends Controller
             return $this->successResponse('Document uploaded', $document, 201);
         } catch (\Exception $e) {
             return $this->errorResponse('Upload failed: ' . $e->getMessage(), [], 500);
+        }
+    }
+
+    public function submitForVerification()
+    {
+        try {
+            $user = auth()->user();
+            $pharmacy = $this->pharmacyService->getPharmacyProfile($user);
+            if (!$pharmacy) return $this->errorResponse('Pharmacy not found', [], 404);
+
+            $this->pharmacyService->submitForVerification($pharmacy->id);
+            return $this->successResponse('Verification request submitted');
+        } catch (\Exception $e) {
+            return $this->errorResponse('Submission failed: ' . $e->getMessage(), [], 500);
+        }
+    }
+    public function cancelVerification()
+    {
+        try {
+            $user = auth()->user();
+            $pharmacy = $this->pharmacyService->getPharmacyProfile($user);
+            if (!$pharmacy) return $this->errorResponse('Pharmacy not found', [], 404);
+
+            $this->pharmacyService->cancelVerificationSubmission($pharmacy->id);
+            return $this->successResponse('Verification request cancelled');
+        } catch (\Exception $e) {
+            return $this->errorResponse('Cancellation failed: ' . $e->getMessage(), [], 500);
         }
     }
 

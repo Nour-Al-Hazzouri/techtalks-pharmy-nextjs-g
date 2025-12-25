@@ -15,7 +15,7 @@ class PharmacyDocumentRequest extends FormRequest
     {
         return [
             'file' => 'required|file|mimes:pdf,jpg,jpeg,png,docx|max:5120', // Max 5MB
-            'doc_type' => 'required|string|in:license,registration,id_proof,other',
+            'doc_type' => 'required|string|in:license,registration,id_proof,other,Medical License,MOPH Permit',
         ];
     }
 }

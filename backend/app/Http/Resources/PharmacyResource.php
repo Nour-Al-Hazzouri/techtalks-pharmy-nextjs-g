@@ -24,6 +24,7 @@ class PharmacyResource extends JsonResource
             'total_reports' => $this->reports()->count(),
             'distance' => $this->when(isset($this->distance), $this->distance),
             'medicines' => MedicineResource::collection($this->whenLoaded('medicines')),
+            'documents' => $this->whenLoaded('documents'),
             'pivot' => $this->whenPivotLoaded('pharmacy_medicines', function () {
                 return [
                    'quantity' => $this->pivot->quantity,

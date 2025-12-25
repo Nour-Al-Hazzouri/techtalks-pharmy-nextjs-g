@@ -34,8 +34,11 @@ export interface SearchedMedicine {
 /**
  * Get pharmacies list
  */
-export async function getPharmacies(params?: { verified?: '0' | '1' }): Promise<ApiResponse<PaginatedResponse<PublicPharmacy>>> {
-    const query = params ? `?verified=${params.verified}` : '';
+export async function getPharmacies(params?: { verified?: '0' | '1', status?: string }): Promise<ApiResponse<PaginatedResponse<PublicPharmacy>>> {
+    const searchParams = new URLSearchParams()
+    if (params?.verified) searchParams.append('verified', params.verified)
+    if (params?.status) searchParams.append('status', params.status)
+    const query = searchParams.toString() ? `?${searchParams.toString()}` : ''
     return apiFetch<ApiResponse<PaginatedResponse<PublicPharmacy>>>(`/pharmacies${query}`);
 }
 
