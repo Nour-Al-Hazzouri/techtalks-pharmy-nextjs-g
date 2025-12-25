@@ -6,31 +6,29 @@ import { Download, FileText, Upload, XCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
+import { uploadInventoryCSV } from "@/lib/api/pharmacy"
+import { ApiError } from "@/lib/api/config"
 
 type UploadStatus = "idle" | "uploading" | "success" | "failed"
 
 type ParsedRow = {
-    name: string
-    available: boolean
+    medicine_name: string
     quantity: number
+    price: number
 }
 
-function isCsvFile(file: File) {
-    const nameOk = file.name.toLowerCase().endsWith(".csv")
+function isCsvOrTxtFile(file: File) {
+    const nameOk = file.name.toLowerCase().endsWith(".csv") || file.name.toLowerCase().endsWith(".txt")
     const typeOk =
         file.type === "text/csv" ||
+        file.type === "text/plain" ||
         file.type === "application/vnd.ms-excel" ||
         file.type === ""
 
     return nameOk && typeOk
 }
 
-function parseBoolean(value: string) {
-    const v = value.trim().toLowerCase()
-    if (v === "true" || v === "1" || v === "yes") return true
-    if (v === "false" || v === "0" || v === "no") return false
-    return null
-}
+
 
 function safeSplitCsvLine(line: string) {
     const result: string[] = []
@@ -75,12 +73,12 @@ function parseCsv(text: string): ParsedRow[] {
 
     const header = safeSplitCsvLine(lines[0]).map((h) => h.toLowerCase())
 
-    const nameIndex = header.indexOf("name")
-    const availableIndex = header.indexOf("available")
+    const nameIndex = header.indexOf("medicine_name")
     const quantityIndex = header.indexOf("quantity")
+    const priceIndex = header.indexOf("price")
 
-    if (nameIndex === -1 || availableIndex === -1 || quantityIndex === -1) {
-        throw new Error("CSV header must include: name, available, quantity")
+    if (nameIndex === -1 || quantityIndex === -1 || priceIndex === -1) {
+        throw new Error("CSV header must include: medicine_name, quantity, price")
     }
 
     const rows: ParsedRow[] = []
@@ -88,15 +86,9 @@ function parseCsv(text: string): ParsedRow[] {
     for (let i = 1; i < lines.length; i++) {
         const cols = safeSplitCsvLine(lines[i])
 
-        const name = (cols[nameIndex] ?? "").trim()
-        if (!name) {
-            throw new Error(`Row ${i + 1}: name is required`) 
-        }
-
-        const availableRaw = (cols[availableIndex] ?? "").trim()
-        const parsedAvailable = parseBoolean(availableRaw)
-        if (parsedAvailable === null) {
-            throw new Error(`Row ${i + 1}: available must be true/false (or 1/0, yes/no)`) 
+        const medicine_name = (cols[nameIndex] ?? "").trim()
+        if (!medicine_name) {
+            throw new Error(`Row ${i + 1}: medicine_name is required`) 
         }
 
         const quantityRaw = (cols[quantityIndex] ?? "").trim()
@@ -105,10 +97,16 @@ function parseCsv(text: string): ParsedRow[] {
             throw new Error(`Row ${i + 1}: quantity must be a non-negative number`) 
         }
 
+        const priceRaw = (cols[priceIndex] ?? "").trim()
+        const price = Number(priceRaw)
+        if (!Number.isFinite(price) || price < 0) {
+            throw new Error(`Row ${i + 1}: price must be a non-negative number`) 
+        }
+
         rows.push({
-            name,
-            available: parsedAvailable,
+            medicine_name,
             quantity: Math.floor(qty),
+            price: parseFloat(price.toFixed(2)),
         })
     }
 
@@ -147,9 +145,9 @@ export function BulkUploadContent() {
                 return
             }
 
-            if (!isCsvFile(next)) {
+            if (!isCsvOrTxtFile(next)) {
                 setFile(null)
-                setError("Only CSV files are allowed.")
+                setError("Only CSV and TXT files are allowed.")
                 return
             }
 
@@ -160,9 +158,10 @@ export function BulkUploadContent() {
 
     const downloadTemplate = () => {
         const template = [
-            "name,available,quantity",
-            "Paracetamol 500mg,true,25",
-            "Ibuprofen,false,0",
+            "medicine_name,quantity,price",
+            "Paracetamol 500mg,100,5.50",
+            "Ibuprofen 200mg,50,8.00",
+            "Amoxicillin 250mg,75,12.50",
         ].join("\n")
 
         const blob = new Blob([template], { type: "text/csv;charset=utf-8" })
@@ -187,28 +186,35 @@ export function BulkUploadContent() {
         setStats(null)
 
         try {
+            // Validate CSV format before uploading
             const text = await file.text()
             const parsed = parseCsv(text)
 
             setStats({ total: parsed.length })
 
-            const startedAt = Date.now()
-            const durationMs = 2400
+            // Simulate progress while uploading
+            const progressInterval = window.setInterval(() => {
+                setProgress((prev) => {
+                    if (prev >= 90) return prev
+                    return prev + 10
+                })
+            }, 200)
 
-            const timer = window.setInterval(() => {
-                const elapsed = Date.now() - startedAt
-                const pct = Math.min(100, Math.round((elapsed / durationMs) * 100))
-                setProgress(pct)
+            // Upload to backend
+            await uploadInventoryCSV(file)
 
-                if (pct >= 100) {
-                    window.clearInterval(timer)
-                    setStatus("success")
-                }
-            }, 80)
+            // Complete progress
+            window.clearInterval(progressInterval)
+            setProgress(100)
+            setStatus("success")
         } catch (e) {
             setProgress(0)
             setStatus("failed")
-            setError(e instanceof Error ? e.message : "Upload failed.")
+            if (e instanceof ApiError) {
+                setError(e.message || "Upload failed.")
+            } else {
+                setError(e instanceof Error ? e.message : "Upload failed.")
+            }
         }
     }
 
@@ -282,7 +288,7 @@ export function BulkUploadContent() {
                                 <input
                                     ref={inputRef}
                                     type="file"
-                                    accept={".csv,text/csv"}
+                                    accept=".csv,.txt,text/csv,text/plain,application/vnd.ms-excel"
                                     className="absolute inset-0 opacity-0 cursor-pointer"
                                     disabled={status === "uploading"}
                                     onChange={(e) => {
@@ -297,7 +303,7 @@ export function BulkUploadContent() {
                                 <div className="mt-4 text-sm font-medium text-gray-800">
                                     Click to upload or drag and drop
                                 </div>
-                                <div className="mt-1 text-xs text-gray-500">CSV files only</div>
+                                <div className="mt-1 text-xs text-gray-500">CSV or TXT files only</div>
                             </div>
 
                             {file && (
@@ -393,9 +399,9 @@ export function BulkUploadContent() {
                     <CardContent>
                         <ol className="space-y-3 text-sm text-gray-600 list-decimal list-inside">
                             <li>Download the CSV template to ensure correct formatting</li>
-                            <li>Fill your medicine data including name, availability, and stock quantity</li>
-                            <li>Upload the file (CSV only)</li>
-                            <li>You’ll see progress and a success/failed message at the end</li>
+                            <li>Fill your medicine data including name, quantity, and price</li>
+                            <li>Upload the file (CSV or TXT)</li>
+                            <li>You&apos;ll see progress and a success/failed message at the end</li>
                         </ol>
 
                         <div className="mt-6 rounded-xl border border-gray-100 bg-white p-4">
@@ -404,13 +410,13 @@ export function BulkUploadContent() {
                             </div>
                             <div className="mt-2 text-xs text-gray-600">
                                 <div>
-                                    <span className="font-medium">name</span>
+                                    <span className="font-medium">medicine_name</span> - Name of the medicine
                                 </div>
                                 <div>
-                                    <span className="font-medium">available</span> (true/false)
+                                    <span className="font-medium">quantity</span> - Stock quantity (number)
                                 </div>
                                 <div>
-                                    <span className="font-medium">quantity</span> (number)
+                                    <span className="font-medium">price</span> - Price per unit (number)
                                 </div>
                             </div>
                         </div>
