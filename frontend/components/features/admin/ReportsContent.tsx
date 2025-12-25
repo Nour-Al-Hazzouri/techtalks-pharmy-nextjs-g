@@ -38,6 +38,13 @@ function ReportReviewModal({ report, isOpen, onClose, onStatusUpdate, onVerifica
     const [actionLoading, setActionLoading] = React.useState<string | null>(null)
     const [rejectReason, setRejectReason] = React.useState("")
     const [showRejectForm, setShowRejectForm] = React.useState(false)
+    const [localPharmacy, setLocalPharmacy] = React.useState(report?.pharmacy)
+
+    React.useEffect(() => {
+        if (report?.pharmacy) {
+            setLocalPharmacy(report.pharmacy)
+        }
+    }, [report])
 
     if (!isOpen || !report) return null
 
@@ -45,6 +52,7 @@ function ReportReviewModal({ report, isOpen, onClose, onStatusUpdate, onVerifica
         setActionLoading('approve')
         try {
             await approvePharmacy(report.pharmacy_id)
+            setLocalPharmacy(prev => prev ? { ...prev, verified: true } : prev)
             onVerificationUpdate()
         } catch (err) {
             console.error("Failed to approve pharmacy:", err)
@@ -58,6 +66,7 @@ function ReportReviewModal({ report, isOpen, onClose, onStatusUpdate, onVerifica
         setActionLoading('reject')
         try {
             await rejectPharmacy(report.pharmacy_id, rejectReason)
+            setLocalPharmacy(prev => prev ? { ...prev, verified: false } : prev)
             setShowRejectForm(false)
             setRejectReason("")
             onVerificationUpdate()
@@ -137,26 +146,26 @@ function ReportReviewModal({ report, isOpen, onClose, onStatusUpdate, onVerifica
                             </h4>
                             <div className={cn(
                                 "flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase",
-                                report.pharmacy?.verified ? "bg-green-50 text-green-700 border border-green-100" : "bg-amber-50 text-amber-700 border border-amber-100"
+                                localPharmacy?.verified ? "bg-green-50 text-green-700 border border-green-100" : "bg-amber-50 text-amber-700 border border-amber-100"
                             )}>
-                                {report.pharmacy?.verified ? <ShieldCheck className="h-3 w-3" /> : <ShieldAlert className="h-3 w-3" />}
-                                {report.pharmacy?.verified ? 'Verified' : 'Unverified'}
+                                {localPharmacy?.verified ? <ShieldCheck className="h-3 w-3" /> : <ShieldAlert className="h-3 w-3" />}
+                                {localPharmacy?.verified ? 'Verified' : 'Unverified'}
                             </div>
                         </div>
                         <div className="bg-white border border-gray-100 rounded-3xl p-6 space-y-6 shadow-sm">
                             <div className="flex flex-col md:flex-row justify-between gap-6">
                                 <div className="space-y-4 flex-1">
                                     <div>
-                                        <h5 className="text-xl font-black text-gray-900 uppercase italic leading-none">{report.pharmacy?.name}</h5>
+                                        <h5 className="text-xl font-black text-gray-900 uppercase italic leading-none">{localPharmacy?.name}</h5>
                                         <div className="flex items-center gap-2 mt-2 text-gray-500">
                                             <MapPin className="h-4 w-4 text-[#E91E63]" />
-                                            <p className="text-sm font-medium">{report.pharmacy?.address}</p>
+                                            <p className="text-sm font-medium">{localPharmacy?.address}</p>
                                         </div>
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="flex items-center gap-2 text-sm">
                                             <PhoneIcon className="h-4 w-4 text-gray-400" />
-                                            <span className="font-semibold text-gray-600">{report.pharmacy?.phone || "No Phone"}</span>
+                                            <span className="font-semibold text-gray-600">{localPharmacy?.phone || "No Phone"}</span>
                                         </div>
                                         <div className="flex items-center gap-2 text-sm">
                                             <FileText className="h-4 w-4 text-gray-400" />
@@ -165,10 +174,10 @@ function ReportReviewModal({ report, isOpen, onClose, onStatusUpdate, onVerifica
                                     </div>
                                 </div>
                                 <div className="flex flex-col gap-2">
-                                    {!report.pharmacy?.verified ? (
+                                    {!localPharmacy?.verified ? (
                                         <Button
                                             onClick={handleApprove}
-                                            disabled={!!actionLoading}
+                                            disabled={!!actionLoading || report.status === 'resolved'}
                                             className="bg-green-600 hover:bg-green-700 text-white font-bold h-11 rounded-xl shadow-lg shadow-green-100"
                                         >
                                             {actionLoading === 'approve' ? <Loader2 className="h-4 w-4 animate-spin" /> : "Verify Pharmacy"}
@@ -179,6 +188,7 @@ function ReportReviewModal({ report, isOpen, onClose, onStatusUpdate, onVerifica
                                                 <Button
                                                     onClick={() => setShowRejectForm(true)}
                                                     variant="outline"
+                                                    disabled={report.status === 'resolved'}
                                                     className="w-full text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300 font-bold h-11 rounded-xl"
                                                 >
                                                     Revoke Verification

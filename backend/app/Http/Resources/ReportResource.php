@@ -11,8 +11,10 @@ class ReportResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'pharmacy_id' => $this->pharmacy_id,
+            'user_id' => $this->user_id,
             'pharmacy' => new PharmacyResource($this->whenLoaded('pharmacy')),
-            'reporter' => new UserResource($this->whenLoaded('reporter')),
+            'user' => new UserResource($this->whenLoaded('reporter')),
             'reason' => $this->reason,
             'report_type' => $this->report_type,
             'status' => $this->report_status,
