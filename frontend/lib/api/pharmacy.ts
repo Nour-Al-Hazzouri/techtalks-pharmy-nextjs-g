@@ -25,6 +25,7 @@ export interface PharmacyProfile {
     latitude: string;
     longitude: string;
     verification_status: 'incomplete' | 'pending' | 'verified' | 'rejected';
+    rejection_reason?: string | null;
     rating: string | null;
 }
 

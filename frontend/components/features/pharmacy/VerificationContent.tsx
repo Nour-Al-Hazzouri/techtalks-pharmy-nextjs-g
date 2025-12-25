@@ -11,7 +11,8 @@ import {
     X,
     ExternalLink,
     Clock,
-    ShieldCheck
+    ShieldCheck,
+    AlertTriangle
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -160,12 +161,12 @@ export function VerificationContent() {
                 }
             case 'rejected':
                 return {
-                    icon: AlertCircle,
+                    icon: AlertTriangle,
                     color: "text-red-600",
                     bg: "bg-red-50",
                     border: "border-red-100",
-                    label: "Action Required",
-                    desc: "Your verification was not approved. Please review the requirements and re-upload."
+                    label: "Verification Revoked",
+                    desc: "Administrative action has been taken on your account. Please review the details below."
                 }
             default:
                 return {
@@ -278,6 +279,34 @@ export function VerificationContent() {
                         </Button>
                     )}
                 </div>
+
+                {/* Rejection Details Warning */}
+                {profile?.verification_status === 'rejected' && (
+                    <div className="bg-[#FFF8F8] border-2 border-red-100 rounded-3xl p-6 md:p-8 animate-in slide-in-from-top-4 duration-500 overflow-hidden relative group">
+                        <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-10 transition-opacity">
+                            <Shield className="h-32 w-32 text-red-600 -rotate-12" />
+                        </div>
+                        <div className="flex flex-col md:flex-row items-start gap-6 relative z-10">
+                            <div className="h-12 w-12 bg-red-100 rounded-2xl flex items-center justify-center shrink-0 shadow-sm shadow-red-200">
+                                <AlertTriangle className="h-6 w-6 text-red-600" />
+                            </div>
+                            <div className="space-y-3">
+                                <h3 className="text-lg font-black text-red-900 uppercase italic leading-none">Administrative Notice</h3>
+                                <div className="space-y-1">
+                                    <p className="text-[10px] font-bold text-red-400 uppercase tracking-widest">Reason for Revocation</p>
+                                    <div className="bg-white/50 border border-red-50 p-4 rounded-2xl">
+                                        <p className="text-red-700 font-medium italic leading-relaxed">
+                                            "{profile.rejection_reason || "No specific reason was provided by the administration."}"
+                                        </p>
+                                    </div>
+                                </div>
+                                <p className="text-xs text-red-400 font-medium max-w-lg">
+                                    Please ensure all your documents are valid and up to date. You can re-submit for verification once the issues are resolved.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Upload Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
