@@ -3,6 +3,7 @@
 import * as React from "react"
 import dynamic from "next/dynamic"
 import { MapHeader } from "@/components/features/map/MapHeader"
+import { ExpandableSearchBar } from "@/components/features/map/ExpandableSearchBar"
 import { PharmacyList } from "@/components/features/map/PharmacyList"
 import { PharmacyDetails } from "@/components/features/map/PharmacyDetails"
 import { Pharmacy } from "@/lib/mock-data" // Keeping type import for now
@@ -217,7 +218,6 @@ export function MapPageContainer() {
         <div className="flex flex-col h-screen overflow-hidden bg-gray-50">
             <MapHeader
                 searchQuery={searchQuery}
-                onSearch={handleSearch}
                 onClear={handleClearSearch}
                 location={location}
                 onLocationSelect={(loc) => {
@@ -256,6 +256,9 @@ export function MapPageContainer() {
                             }
                     `}
                     >
+                        <div className="shrink-0 px-2.5 py-3 border-b border-gray-100">
+                            <ExpandableSearchBar onSearch={(term) => handleSearch(term)} />
+                        </div>
                         {renderPanelContent()}
                     </aside>
                 )}
@@ -276,6 +279,9 @@ export function MapPageContainer() {
                                     <DrawerTitle>Pharmacy Details</DrawerTitle>
                                     <DrawerDescription>List of available pharmacies</DrawerDescription>
                                 </DrawerHeader>
+                                <div className="shrink-0 px-2.5 py-3 border-b border-gray-100 bg-white">
+                                    <ExpandableSearchBar onSearch={(term) => handleSearch(term)} />
+                                </div>
                                 {renderPanelContent()}
                             </div>
                         </DrawerContent>

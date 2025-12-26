@@ -3,20 +3,18 @@
 import { MapPin, X, LogOut } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { logout } from "@/lib/api/auth"
-import { ExpandableSearchBar } from "./ExpandableSearchBar"
 import { LocationSearchBar, SelectedLocation } from "./LocationSearchBar"
 import { Button } from "@/components/ui/button"
 
 interface MapHeaderProps {
     searchQuery: string
-    onSearch: (term: string) => void
     onClear: () => void
     location: SelectedLocation | null
     onLocationSelect: (location: SelectedLocation) => void
     onLocationClear: () => void
 }
 
-export function MapHeader({ searchQuery, onSearch, onClear, location, onLocationSelect, onLocationClear }: MapHeaderProps) {
+export function MapHeader({ searchQuery, onClear, location, onLocationSelect, onLocationClear }: MapHeaderProps) {
     const router = useRouter()
 
 
@@ -70,7 +68,6 @@ export function MapHeader({ searchQuery, onSearch, onClear, location, onLocation
             </div>
             <div className="flex items-center gap-2 shrink-0">
                 <LocationSearchBar value={location} onSelect={onLocationSelect} onClear={onLocationClear} />
-                <ExpandableSearchBar onSearch={onSearch} />
                 <Button
                     variant="ghost"
                     size="sm"
