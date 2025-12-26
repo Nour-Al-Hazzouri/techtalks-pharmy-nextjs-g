@@ -1,13 +1,14 @@
 "use client"
 
 import * as React from "react"
-import { Plus, Search, Save, Trash2, XCircle, Loader2 } from "lucide-react"
+import { Plus, Search, Save, Trash2, XCircle, Loader2, Download } from "lucide-react"
 import { addRecentActivityEntries } from "@/lib/pharmacy-recent-activity"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
-import { updateInventoryItem, deleteInventoryItem, addInventoryItem } from "@/lib/api/pharmacy"
+import { updateInventoryItem, deleteInventoryItem, addInventoryItem, exportInventoryCSV } from "@/lib/api/pharmacy"
 import type { InventoryDisplayItem } from "./InventoryContent"
+
 
 type InventoryTableProps = {
     items: InventoryDisplayItem[]
@@ -281,6 +282,15 @@ export function InventoryTable({ items, onItemsChange, onRefresh }: InventoryTab
         }
     }
 
+    const handleExport = async () => {
+        try {
+            await exportInventoryCSV()
+        } catch (error) {
+            console.error("Failed to export inventory:", error)
+            alert("Failed to export inventory. Please try again.")
+        }
+    }
+
     return (
         <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
             <div className="p-4 border-b border-gray-100 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -308,6 +318,18 @@ export function InventoryTable({ items, onItemsChange, onRefresh }: InventoryTab
                             disabled={!addQuery.trim() || saving}
                         >
                             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Add"}
+                        </Button>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={handleExport}
+                            disabled={saving}
+                        >
+                            <Download className="h-4 w-4" />
+                            Export CSV
                         </Button>
                     </div>
                 </div>

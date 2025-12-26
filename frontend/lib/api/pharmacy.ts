@@ -216,3 +216,84 @@ export async function cancelVerificationSubmission(): Promise<ApiResponse<any>> 
         method: 'POST'
     });
 }
+
+/**
+ * Upload inventory CSV file for bulk updates
+ * Accepts CSV or TXT files with medicine data
+ */
+export async function uploadInventoryCSV(file: File): Promise<ApiResponse<unknown>> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const getAuthToken = () => {
+        if (typeof document === 'undefined') return null;
+        const match = document.cookie.match(/auth_token=([^;]+)/);
+        return match ? match[1] : null;
+    };
+
+    const token = getAuthToken();
+    const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
+
+    const response = await fetch(`${API_BASE_URL}/pharmacy/inventory/upload`, {
+        method: 'POST',
+        headers: headers,
+        body: formData
+    });
+
+    const resData = await response.json();
+
+    if (!response.ok) {
+        throw new ApiError(
+            resData.message || 'An error occurred during CSV upload',
+            response.status,
+            resData.errors || null
+        );
+    }
+
+    return resData;
+}
+
+/**
+ * Export inventory as CSV file
+ * Downloads the pharmacy's current inventory data
+ */
+export async function exportInventoryCSV(): Promise<void> {
+    const getAuthToken = () => {
+        if (typeof document === 'undefined') return null;
+        const match = document.cookie.match(/auth_token=([^;]+)/);
+        return match ? match[1] : null;
+    };
+
+    const token = getAuthToken();
+    const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
+
+    const response = await fetch(`${API_BASE_URL}/pharmacy/inventory/export`, {
+        method: 'GET',
+        headers: headers,
+    });
+
+    if (!response.ok) {
+        const resData = await response.json();
+        throw new ApiError(
+            resData.message || 'Export failed',
+            response.status,
+            resData.errors || null
+        );
+    }
+
+    // Get the filename from the Content-Disposition header or use a default
+    const contentDisposition = response.headers.get('Content-Disposition');
+    const filenameMatch = contentDisposition?.match(/filename="?(.+)"?/);
+    const filename = filenameMatch ? filenameMatch[1] : `inventory_${new Date().toISOString().split('T')[0]}.csv`;
+
+    // Create a blob from the response and trigger download
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+}
