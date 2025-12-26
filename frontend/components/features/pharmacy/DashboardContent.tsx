@@ -104,13 +104,7 @@ export function DashboardContent() {
                 />
             </div>
 
-            <div className="grid grid-cols-2 lg:grid-cols-2 gap-4 mb-8">
-                <DashboardStatsCard
-                    title="Average Rating"
-                    value={stats?.average_rating ? Number(stats.average_rating).toFixed(1) : "N/A"}
-                    icon={<Star className="h-5 w-5 text-yellow-500" />}
-                    iconBgColor="bg-yellow-50"
-                />
+            <div className="mb-8">
                 <DashboardStatsCard
                     title="Total Reports"
                     value={stats?.total_reports ?? 0}

@@ -17,13 +17,13 @@ import { AdminRecentActivity } from "./AdminRecentActivity"
 
 // Mock admin dashboard stats
 const ADMIN_STATS = {
-    pendingReviews: 8,
+    pendingVerifications: 8,
     verifiedPharmacies: 142,
     rejected: 12,
     totalMedicines: 285,
 }
 
-const MOCK_URGENT_REVIEWS = [
+const MOCK_PENDING_VERIFICATIONS = [
     { id: "1", name: "Al Manara Pharmacy", submittedDate: "Submitted 2 days ago", documents: 5 },
     { id: "2", name: "Dubai Medical Center", submittedDate: "Submitted 1 day ago", documents: 4 },
     { id: "3", name: "Wellness Pharmacy", submittedDate: "Submitted 3 days ago", documents: 5 },
@@ -33,7 +33,7 @@ export function AdminDashboardContent() {
     const quickActions = [
         {
             title: "VERIFY PHARMACIES",
-            subtitle: "Review pending pharmacy registrations",
+            subtitle: "Verify pending pharmacy registrations",
             href: "/admin/verify",
             icon: <ShieldCheck className="h-6 w-6 text-[#E91E63]" />,
             iconBgColor: "bg-pink-50",
@@ -58,8 +58,8 @@ export function AdminDashboardContent() {
             {/* Stats Cards - 2x2 on mobile, 4 columns on desktop */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
                 <AdminStatsCard
-                    title="Pending Reviews"
-                    value={ADMIN_STATS.pendingReviews}
+                    title="Pending Verifications"
+                    value={ADMIN_STATS.pendingVerifications}
                     icon={<Clock className="h-5 w-5 text-orange-500" />}
                     iconBgColor="bg-orange-50"
                 />
@@ -83,11 +83,11 @@ export function AdminDashboardContent() {
                 />
             </div>
 
-            {/* Urgent Reviews - Vertical list on mobile */}
+            {/* Pending Verifications - Vertical list on mobile */}
             <div className="mb-6 md:mb-8">
                 <div className="flex items-center justify-between mb-4">
                     <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                        Urgent Reviews
+                        Pending Verifications
                     </h2>
                     <Link
                         href="/admin/verify"
@@ -97,7 +97,7 @@ export function AdminDashboardContent() {
                     </Link>
                 </div>
                 <div className="space-y-3">
-                    {MOCK_URGENT_REVIEWS.map((review) => (
+                    {MOCK_PENDING_VERIFICATIONS.map((review) => (
                         <Link
                             key={review.id}
                             href="/admin/verify"

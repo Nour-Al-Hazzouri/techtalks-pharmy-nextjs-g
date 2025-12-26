@@ -26,7 +26,7 @@ import { getAdminReports, updateReportStatus, approvePharmacy, rejectPharmacy, A
 import { format } from "date-fns"
 import { Button } from "@/components/ui/button"
 
-interface ReviewModalProps {
+interface ReportActionModalProps {
     report: AdminReport | null
     isOpen: boolean
     onClose: () => void
@@ -34,7 +34,7 @@ interface ReviewModalProps {
     onVerificationUpdate: () => void
 }
 
-function ReportReviewModal({ report, isOpen, onClose, onStatusUpdate, onVerificationUpdate }: ReviewModalProps) {
+function ReportActionModal({ report, isOpen, onClose, onStatusUpdate, onVerificationUpdate }: ReportActionModalProps) {
     const [actionLoading, setActionLoading] = React.useState<string | null>(null)
     const [rejectReason, setRejectReason] = React.useState("")
     const [showRejectForm, setShowRejectForm] = React.useState(false)
@@ -97,7 +97,7 @@ function ReportReviewModal({ report, isOpen, onClose, onStatusUpdate, onVerifica
                             <AlertTriangle className="h-5 w-5 text-[#E91E63]" />
                         </div>
                         <div>
-                            <h3 className="text-lg font-bold text-gray-900 leading-tight">Review Report #{report.id}</h3>
+                            <h3 className="text-lg font-bold text-gray-900 leading-tight">Report Details #{report.id}</h3>
                             <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">
                                 {report.report_type.replace('_', ' ')}
                             </p>
@@ -450,7 +450,7 @@ export function ReportsContent() {
                                             variant="outline"
                                             className="flex-1 lg:w-40 h-14 bg-white border-2 border-gray-100 text-gray-700 font-black italic rounded-2xl hover:bg-gray-50 hover:border-gray-200 hover:text-[#E91E63] transition-all hover:translate-x-1"
                                         >
-                                            REVIEW
+                                            DETAILS
                                         </Button>
                                         <Button
                                             onClick={() => handleUpdateStatus(report.id, 'resolved')}
@@ -472,7 +472,7 @@ export function ReportsContent() {
                 </div>
             )}
 
-            <ReportReviewModal
+            <ReportActionModal
                 report={selectedReport}
                 isOpen={!!selectedReport}
                 onClose={() => setSelectedReport(null)}

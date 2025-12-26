@@ -42,7 +42,7 @@ export function UrgentReviewsSection() {
         <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    Urgent Reviews
+                    Pending Verifications
                 </h2>
                 <Link
                     href="/admin/verify"

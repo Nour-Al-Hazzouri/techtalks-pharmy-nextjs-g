@@ -125,7 +125,7 @@ function DocumentViewerModal({ document, onClose }: DocumentViewerModalProps) {
     )
 }
 
-interface ReviewModalProps {
+interface VerificationModalProps {
     pharmacy: Pharmacy | null
     isOpen: boolean
     onClose: () => void
@@ -134,7 +134,7 @@ interface ReviewModalProps {
     onViewDocument: (doc: Document) => void
 }
 
-function ReviewModal({ pharmacy, isOpen, onClose, onApprove, onReject, onViewDocument }: ReviewModalProps) {
+function VerificationModal({ pharmacy, isOpen, onClose, onApprove, onReject, onViewDocument }: VerificationModalProps) {
     if (!isOpen || !pharmacy) return null
 
     return (
@@ -147,7 +147,7 @@ function ReviewModal({ pharmacy, isOpen, onClose, onApprove, onReject, onViewDoc
                             <Shield className="h-5 w-5 text-orange-600" />
                         </div>
                         <div>
-                            <h3 className="text-lg font-bold text-gray-900 leading-tight">Verification Review</h3>
+                            <h3 className="text-lg font-bold text-gray-900 leading-tight">Verification Details</h3>
                             <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">
                                 Pharmacy ID: #{pharmacy.id}
                             </p>
@@ -401,8 +401,8 @@ export function VerifyPharmaciesContent() {
                 </div>
             )}
 
-            {/* Review Modal */}
-            <ReviewModal
+            {/* Verification Modal */}
+            <VerificationModal
                 pharmacy={selectedPharmacy}
                 isOpen={!!selectedPharmacy}
                 onClose={() => setSelectedPharmacy(null)}
