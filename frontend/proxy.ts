@@ -15,7 +15,7 @@ export function proxy(request: NextRequest) {
     const isPublicPath = publicPaths.some(path => pathname.startsWith(path))
 
     // Pharmacy-only routes
-    const pharmacyRoutes = ['/dashboard', '/inventory', '/bulk-upload']
+    const pharmacyRoutes = ['/dashboard', '/inventory', '/bulk-upload', '/verification']
     const isPharmacyRoute = pharmacyRoutes.some(route => pathname.startsWith(route))
 
     // If on a public path (login/register)

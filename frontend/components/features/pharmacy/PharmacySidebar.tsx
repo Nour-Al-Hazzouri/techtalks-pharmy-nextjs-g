@@ -11,6 +11,7 @@ import {
     Upload,
     LogOut,
     ChevronRight,
+    Shield
 } from "lucide-react"
 
 interface NavItem {
@@ -23,12 +24,14 @@ const navItems: NavItem[] = [
     { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { label: "Stock Management", href: "/inventory", icon: Package },
     { label: "CSV Bulk Upload", href: "/bulk-upload", icon: Upload },
+    { label: "Verification", href: "/verification", icon: Shield },
 ]
 
 const mobileLabels: Record<string, string> = {
     "/dashboard": "Dashboard",
     "/inventory": "Stock",
     "/bulk-upload": "Upload",
+    "/verification": "Verify",
 }
 
 interface PharmacySidebarProps {
@@ -148,7 +151,7 @@ export function PharmacySidebar({
 
             {/* Mobile Bottom Navigation */}
             <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-100">
-                <ul className="grid grid-cols-3">
+                <ul className="grid grid-cols-4">
                     {navItems.map((item) => {
                         const isActive = mounted ? pathname === item.href : false
                         const Icon = item.icon

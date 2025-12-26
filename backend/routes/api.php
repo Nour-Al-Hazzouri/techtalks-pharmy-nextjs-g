@@ -40,6 +40,8 @@ Route::prefix('v1')->group(function () {
             Route::post('pharmacy/register', [PharmacyController::class, 'register']);
             Route::get('pharmacy/profile', [PharmacyController::class, 'myProfile']);
             Route::match(['put', 'patch'], 'pharmacy/profile', [PharmacyController::class, 'updateProfile']);
+            Route::post('pharmacy/submit-verification', [PharmacyController::class, 'submitForVerification']);
+            Route::post('pharmacy/cancel-verification', [PharmacyController::class, 'cancelVerification']);
             
             Route::get('pharmacy/inventory', [InventoryController::class, 'index']);
             Route::post('pharmacy/inventory', [InventoryController::class, 'store']);

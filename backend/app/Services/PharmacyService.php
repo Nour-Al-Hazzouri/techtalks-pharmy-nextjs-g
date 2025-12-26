@@ -29,8 +29,18 @@ class PharmacyService
     public function registerPharmacy(User $user, array $data)
     {
         $data['pharmacist_id'] = $user->id;
-        $data['verification_status'] = 'pending';
+        $data['verification_status'] = 'incomplete';
         return $this->repo->create($data);
+    }
+
+    public function submitForVerification($pharmacyId)
+    {
+        return $this->repo->update($pharmacyId, ['verification_status' => 'pending']);
+    }
+
+    public function cancelVerificationSubmission($pharmacyId)
+    {
+        return $this->repo->update($pharmacyId, ['verification_status' => 'incomplete']);
     }
 
     public function getPharmacyProfile(User $user)
@@ -57,7 +67,7 @@ class PharmacyService
     
     public function rejectPharmacy($id, $reason)
     {
-        return $this->repo->update($id, ['verification_status' => 'rejected', 'rejection_reason' => $reason]);
+        return $this->repo->update($id, ['verification_status' => 'rejected', 'verified' => false, 'rejection_reason' => $reason]);
     }
 
     public function getTopRated()
@@ -124,6 +134,10 @@ class PharmacyService
 
     public function deleteDocument(Pharmacy $pharmacy, $documentId)
     {
+        if ($pharmacy->verification_status === 'pending') {
+            throw new \Exception('Cannot delete documents while verification is pending.');
+        }
+
         $document = $pharmacy->documents()->findOrFail($documentId);
 
         if (\Illuminate\Support\Facades\Storage::disk('public')->exists($document->file_path)) {

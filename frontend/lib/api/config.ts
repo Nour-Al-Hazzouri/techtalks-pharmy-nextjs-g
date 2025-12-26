@@ -55,6 +55,15 @@ export async function apiFetch<T>(
 
     const data = await response.json();
 
+    if (response.status === 401) {
+        // Token expired or invalid
+        if (typeof document !== 'undefined') {
+            document.cookie = "auth_token=; path=/; max-age=0";
+            document.cookie = "user_role=; path=/; max-age=0";
+            window.location.href = '/login';
+        }
+    }
+
     if (!response.ok) {
         throw new ApiError(
             data.message || 'An error occurred',
