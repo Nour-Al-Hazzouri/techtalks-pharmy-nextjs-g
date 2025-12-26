@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { MapContainer, TileLayer, Marker, Popup, ZoomControl } from "react-leaflet"
+import { MapContainer, TileLayer, Marker, Popup, ZoomControl, useMap } from "react-leaflet"
 import "leaflet/dist/leaflet.css"
 import L from "leaflet"
 import { Pharmacy } from "@/lib/mock-data"
@@ -35,9 +35,21 @@ const createPharmacyIcon = () => {
 interface PharmacyMapProps {
     pharmacies: Pharmacy[]
     onSelect: (pharmacy: Pharmacy) => void
+    center?: [number, number]
 }
 
-export default function PharmacyMap({ pharmacies, onSelect }: PharmacyMapProps) {
+function RecenterMap({ center }: { center?: [number, number] }) {
+    const map = useMap()
+
+    useEffect(() => {
+        if (!center) return
+        map.setView(center, map.getZoom(), { animate: true })
+    }, [center, map])
+
+    return null
+}
+
+export default function PharmacyMap({ pharmacies, onSelect, center }: PharmacyMapProps) {
     // Ensure map only renders on client
     const [isMounted, setIsMounted] = useState(false)
 
@@ -49,11 +61,12 @@ export default function PharmacyMap({ pharmacies, onSelect }: PharmacyMapProps) 
 
     return (
         <MapContainer
-            center={[33.8938, 35.5018]} // Beirut Center
+            center={center ?? [33.8938, 35.5018]} // Beirut Center
             zoom={13}
             className="w-full h-full z-0"
             zoomControl={false}
         >
+            <RecenterMap center={center} />
             <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

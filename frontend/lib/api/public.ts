@@ -31,6 +31,14 @@ export interface SearchedMedicine {
     pharmacies: PublicPharmacy[];
 }
 
+export interface GeocodeResult {
+    place_id: number | string | null;
+    display_name: string | null;
+    lat: string | null;
+    lon: string | null;
+    type: string | null;
+}
+
 /**
  * Get pharmacies list
  */
@@ -48,6 +56,20 @@ export async function getPharmacies(params?: { verified?: '0' | '1', status?: st
  */
 export async function searchMedicines(query: string): Promise<ApiResponse<SearchedMedicine[]>> {
     return apiFetch<ApiResponse<SearchedMedicine[]>>(`/medicines/search?name=${encodeURIComponent(query)}`);
+}
+
+export async function findNearestPharmaciesWithMedicine(params: { name: string; lat: number; lng: number }): Promise<ApiResponse<PublicPharmacy[]>> {
+    const qs = new URLSearchParams({
+        name: params.name,
+        lat: String(params.lat),
+        lng: String(params.lng),
+    })
+
+    return apiFetch<ApiResponse<PublicPharmacy[]>>(`/medicines/nearest?${qs.toString()}`);
+}
+
+export async function geocodeSearch(query: string): Promise<ApiResponse<GeocodeResult[]>> {
+    return apiFetch<ApiResponse<GeocodeResult[]>>(`/geocode/search?q=${encodeURIComponent(query)}`);
 }
 
 /**
