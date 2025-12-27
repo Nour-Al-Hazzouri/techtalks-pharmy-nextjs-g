@@ -3,6 +3,7 @@
 import { MapPin, X, LogOut, Menu, User as UserIcon, KeyRound, Settings } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { logout } from "@/lib/api/auth"
+import { LocationSearchBar, SelectedLocation } from "./LocationSearchBar"
 import { Button } from "@/components/ui/button"
 import * as React from "react"
 
@@ -11,11 +12,22 @@ export type DashboardView = "map" | "settings" | "profile" | "password"
 interface MapHeaderProps {
     searchQuery: string
     onClear: () => void
+    location: SelectedLocation | null
+    onLocationSelect: (location: SelectedLocation) => void
+    onLocationClear: () => void
     activeView: DashboardView
     onViewChange: (view: DashboardView) => void
 }
 
-export function MapHeader({ searchQuery, onClear, activeView, onViewChange }: MapHeaderProps) {
+export function MapHeader({
+    searchQuery,
+    onClear,
+    location,
+    onLocationSelect,
+    onLocationClear,
+    activeView,
+    onViewChange,
+}: MapHeaderProps) {
     const router = useRouter()
     const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false)
 
@@ -75,6 +87,7 @@ export function MapHeader({ searchQuery, onClear, activeView, onViewChange }: Ma
 
             </div>
             <div className="flex items-center gap-2 shrink-0">
+                <LocationSearchBar value={location} onSelect={onLocationSelect} onClear={onLocationClear} />
                 {/* Mobile Burger */}
                 <div className="relative md:hidden">
                     <Button
