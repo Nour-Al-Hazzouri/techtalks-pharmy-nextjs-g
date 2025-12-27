@@ -1,19 +1,23 @@
 "use client"
 
-import { MapPin, X, LogOut } from "lucide-react"
+import { MapPin, X, LogOut, Menu, User as UserIcon, KeyRound, Settings } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { logout } from "@/lib/api/auth"
-import { ExpandableSearchBar } from "./ExpandableSearchBar"
 import { Button } from "@/components/ui/button"
+import * as React from "react"
+
+export type DashboardView = "map" | "settings" | "profile" | "password"
 
 interface MapHeaderProps {
     searchQuery: string
-    onSearch: (term: string) => void
     onClear: () => void
+    activeView: DashboardView
+    onViewChange: (view: DashboardView) => void
 }
 
-export function MapHeader({ searchQuery, onSearch, onClear }: MapHeaderProps) {
+export function MapHeader({ searchQuery, onClear, activeView, onViewChange }: MapHeaderProps) {
     const router = useRouter()
+    const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false)
 
 
     const handleLogout = async () => {
@@ -31,6 +35,11 @@ export function MapHeader({ searchQuery, onSearch, onClear }: MapHeaderProps) {
             router.refresh()
         }
     }
+
+    const settingsItems: Array<{ key: Exclude<DashboardView, "map" | "settings">; label: string; icon: React.ReactNode }> = [
+        { key: "profile", label: "Edit Profile", icon: <UserIcon className="h-4 w-4" /> },
+        { key: "password", label: "Change Password", icon: <KeyRound className="h-4 w-4" /> },
+    ]
 
     return (
         <header className="w-full h-16 bg-white border-b border-gray-100 flex items-center justify-between px-3 sm:px-6 shrink-0 relative z-20 shadow-sm">
@@ -63,18 +72,66 @@ export function MapHeader({ searchQuery, onSearch, onClear }: MapHeaderProps) {
                         <p className="text-xs text-gray-500 truncate">Find nearby pharmacies</p>
                     </div>
                 )}
+
             </div>
             <div className="flex items-center gap-2 shrink-0">
-                <ExpandableSearchBar onSearch={onSearch} />
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleLogout}
-                    className="text-gray-600 hover:text-gray-900"
-                >
-                    <LogOut className="h-4 w-4" />
-                    <span className="hidden sm:inline ml-2">Logout</span>
-                </Button>
+                {/* Mobile Burger */}
+                <div className="relative md:hidden">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setMobileMenuOpen((v) => !v)}
+                        className="text-gray-600 hover:text-gray-900"
+                    >
+                        <Menu className="h-5 w-5" />
+                    </Button>
+
+                    {mobileMenuOpen && (
+                        <div className="absolute right-0 top-full mt-2 w-56 bg-white border border-gray-100 rounded-xl shadow-lg overflow-hidden z-50">
+                            {settingsItems.map((item) => (
+                                <button
+                                    key={item.key}
+                                    type="button"
+                                    onClick={() => {
+                                        onViewChange(item.key)
+                                        setMobileMenuOpen(false)
+                                    }}
+                                    className={
+                                        `w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-gray-50 ${
+                                            activeView === item.key ? "text-[#E91E63]" : "text-gray-700"
+                                        }`
+                                    }
+                                >
+                                    {item.icon}
+                                    <span>{item.label}</span>
+                                </button>
+                            ))}
+
+                            <div className="h-px bg-gray-100" />
+
+                            <button
+                                type="button"
+                                onClick={handleLogout}
+                                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-gray-50 text-gray-700"
+                            >
+                                <LogOut className="h-4 w-4" />
+                                <span>Logout</span>
+                            </button>
+                        </div>
+                    )}
+                </div>
+
+                {/* Desktop Settings */}
+                <div className="relative hidden md:block">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onViewChange("settings")}
+                        className="text-gray-600 hover:text-gray-900"
+                    >
+                        <Settings className="h-5 w-5" />
+                    </Button>
+                </div>
             </div>
         </header>
     )

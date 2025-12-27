@@ -10,6 +10,7 @@ use App\Traits\ApiResponse;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 
 class AuthController extends Controller
 {
@@ -74,9 +75,21 @@ class AuthController extends Controller
 
     public function updateProfile(Request $request)
     {
-         // Needs validation but simplified for now to keep it in one file or reuse request
          $user = auth()->user();
-         $user->update($request->only(['name', 'phone']));
+
+         $validated = $request->validate([
+             'name' => ['sometimes', 'string', 'max:255'],
+             'email' => [
+                 'sometimes',
+                 'email',
+                 'max:255',
+                 Rule::unique('users', 'email')->ignore($user->id),
+             ],
+             'phone' => ['sometimes', 'nullable', 'string', 'max:50'],
+         ]);
+
+         $user->update($validated);
+
          return $this->successResponse('Profile updated', new UserResource($user));
     }
 
