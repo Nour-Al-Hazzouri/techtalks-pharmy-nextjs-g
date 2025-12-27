@@ -54,6 +54,32 @@ export function UserProfilePanel({ onBackToMap }: UserProfilePanelProps) {
         }
     }, [])
 
+    const isValidLebanonPhone = (value: string) => {
+        const raw = value.trim()
+        if (!raw) return true
+
+        const digits = raw.replace(/\D/g, "")
+        if (!digits) return false
+
+        let national = digits
+        if (national.startsWith("961")) {
+            national = national.slice(3)
+        }
+        if (national.startsWith("0")) {
+            national = national.slice(1)
+        }
+
+        if (national.length === 7) {
+            return /^[13456789]\d{6}$/.test(national)
+        }
+
+        if (national.length === 8) {
+            return /^(70|71|76|78|79|80|81)\d{6}$/.test(national)
+        }
+
+        return false
+    }
+
     const onSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setSuccess(null)
@@ -63,8 +89,18 @@ export function UserProfilePanel({ onBackToMap }: UserProfilePanelProps) {
             return
         }
 
+        if (/\d/.test(name)) {
+            setError("Name must not contain numbers")
+            return
+        }
+
         if (!email.trim()) {
             setError("Email is required")
+            return
+        }
+
+        if (phone.trim() && !isValidLebanonPhone(phone)) {
+            setError("Phone number must be a valid Lebanese phone number")
             return
         }
 

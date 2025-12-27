@@ -9,6 +9,7 @@ import {
     LayoutDashboard,
     Package,
     Upload,
+    User as UserIcon,
     LogOut,
     ChevronRight,
     Shield
@@ -25,6 +26,7 @@ const navItems: NavItem[] = [
     { label: "Stock Management", href: "/inventory", icon: Package },
     { label: "CSV Bulk Upload", href: "/bulk-upload", icon: Upload },
     { label: "Verification", href: "/verification", icon: Shield },
+    { label: "Profile", href: "/profile", icon: UserIcon },
 ]
 
 const mobileLabels: Record<string, string> = {
@@ -32,6 +34,7 @@ const mobileLabels: Record<string, string> = {
     "/inventory": "Stock",
     "/bulk-upload": "Upload",
     "/verification": "Verify",
+    "/profile": "Profile",
 }
 
 interface PharmacySidebarProps {
@@ -151,7 +154,7 @@ export function PharmacySidebar({
 
             {/* Mobile Bottom Navigation */}
             <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-100">
-                <ul className="grid grid-cols-4">
+                <ul className="grid grid-cols-5">
                     {navItems.map((item) => {
                         const isActive = mounted ? pathname === item.href : false
                         const Icon = item.icon
