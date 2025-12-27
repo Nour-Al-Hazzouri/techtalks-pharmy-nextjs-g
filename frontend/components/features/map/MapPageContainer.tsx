@@ -10,6 +10,10 @@ import { Pharmacy } from "@/lib/mock-data" // Keeping type import for now
 import { ChevronRight, ChevronLeft, Search, Loader2 } from "lucide-react"
 import { useMediaQuery } from "@/hooks/use-media-query"
 import { useSearchParams } from "next/navigation"
+import type { DashboardView } from "@/components/features/map/MapHeader"
+import { UserProfilePanel } from "./UserProfilePanel"
+import { ChangePasswordPanel } from "./ChangePasswordPanel"
+import { SettingsPanel } from "./SettingsPanel"
 import {
     Drawer,
     DrawerContent,
@@ -60,6 +64,7 @@ export function MapPageContainer() {
     const [isPanelOpen, setIsPanelOpen] = React.useState(true)
     const [searchQuery, setSearchQuery] = React.useState("")
     const [location, setLocation] = React.useState<SelectedLocation | null>(null)
+    const [activeView, setActiveView] = React.useState<DashboardView>("map")
     const isDesktop = useMediaQuery("(min-width: 768px)")
     const [snap, setSnap] = React.useState<number | string | null>(0.5)
     const searchParams = useSearchParams()
@@ -176,6 +181,21 @@ export function MapPageContainer() {
         if (!isDesktop) setIsPanelOpen(false)
     }
 
+    const handleViewChange = (view: DashboardView) => {
+        setActiveView(view)
+        setSelectedPharmacy(null)
+
+        if (view !== "map") {
+            setIsPanelOpen(true)
+            if (!isDesktop) setSnap(1)
+        }
+    }
+
+    const handleBackToMap = () => {
+        setActiveView("map")
+        if (!isDesktop) setSnap(0.5)
+    }
+
     const renderPanelContent = () => {
         if (loading) {
             return (
@@ -228,6 +248,8 @@ export function MapPageContainer() {
                     setLocation(null)
                     if (searchQuery) handleSearch(searchQuery, null)
                 }}
+                activeView={activeView}
+                onViewChange={handleViewChange}
             />
 
             <main className="flex-1 flex overflow-hidden relative">
@@ -236,13 +258,15 @@ export function MapPageContainer() {
                     <PharmacyMap pharmacies={pharmacies} onSelect={handlePharmacySelect} center={location ? [location.lat, location.lng] : undefined} />
 
                     {/* Toggle Panel Button (Visible on Map, Desktop Only) */}
-                    <button
-                        onClick={() => setIsPanelOpen(!isPanelOpen)}
-                        className="hidden md:block absolute top-4 right-4 z-[400] bg-white p-2 rounded-full shadow-md hover:bg-gray-50 border border-gray-200"
-                        title={isPanelOpen ? "Close Panel" : "Open Panel"}
-                    >
-                        {isPanelOpen ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
-                    </button>
+                    {activeView === "map" && (
+                        <button
+                            onClick={() => setIsPanelOpen(!isPanelOpen)}
+                            className="hidden md:block absolute top-4 right-4 z-[400] bg-white p-2 rounded-full shadow-md hover:bg-gray-50 border border-gray-200"
+                            title={isPanelOpen ? "Close Panel" : "Open Panel"}
+                        >
+                            {isPanelOpen ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+                        </button>
+                    )}
                 </div>
 
                 {/* Desktop Sidebar */}
@@ -256,10 +280,20 @@ export function MapPageContainer() {
                             }
                     `}
                     >
-                        <div className="shrink-0 px-2.5 py-3 border-b border-gray-100">
-                            <ExpandableSearchBar onSearch={(term) => handleSearch(term)} />
-                        </div>
-                        {renderPanelContent()}
+                        {activeView === "map" && (
+                            <div className="shrink-0 px-2.5 py-3 border-b border-gray-100">
+                                <ExpandableSearchBar onSearch={(term) => handleSearch(term)} />
+                            </div>
+                        )}
+                        {activeView === "profile" ? (
+                            <UserProfilePanel onBackToMap={handleBackToMap} />
+                        ) : activeView === "settings" ? (
+                            <SettingsPanel onViewChange={handleViewChange} onBackToMap={handleBackToMap} />
+                        ) : activeView === "password" ? (
+                            <ChangePasswordPanel onBackToMap={handleBackToMap} />
+                        ) : (
+                            renderPanelContent()
+                        )}
                     </aside>
                 )}
 
@@ -279,10 +313,20 @@ export function MapPageContainer() {
                                     <DrawerTitle>Pharmacy Details</DrawerTitle>
                                     <DrawerDescription>List of available pharmacies</DrawerDescription>
                                 </DrawerHeader>
-                                <div className="shrink-0 px-2.5 py-3 border-b border-gray-100 bg-white">
-                                    <ExpandableSearchBar onSearch={(term) => handleSearch(term)} />
-                                </div>
-                                {renderPanelContent()}
+                                {activeView === "map" && (
+                                    <div className="shrink-0 px-2.5 py-3 border-b border-gray-100 bg-white">
+                                        <ExpandableSearchBar onSearch={(term) => handleSearch(term)} />
+                                    </div>
+                                )}
+                                {activeView === "profile" ? (
+                                    <UserProfilePanel onBackToMap={handleBackToMap} />
+                                ) : activeView === "settings" ? (
+                                    <SettingsPanel onViewChange={handleViewChange} onBackToMap={handleBackToMap} />
+                                ) : activeView === "password" ? (
+                                    <ChangePasswordPanel onBackToMap={handleBackToMap} />
+                                ) : (
+                                    renderPanelContent()
+                                )}
                             </div>
                         </DrawerContent>
                     </Drawer>
