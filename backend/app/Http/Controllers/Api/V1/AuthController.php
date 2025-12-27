@@ -77,15 +77,60 @@ class AuthController extends Controller
     {
          $user = auth()->user();
 
+         $normalizeLebanonPhone = function (?string $value): ?string {
+             if ($value === null) return null;
+             $raw = trim($value);
+             if ($raw === '') return null;
+             $digits = preg_replace('/\D+/', '', $raw);
+             if (!$digits) return null;
+
+             $national = $digits;
+             if (str_starts_with($national, '961')) {
+                 $national = substr($national, 3);
+             }
+             if (str_starts_with($national, '0')) {
+                 $national = substr($national, 1);
+             }
+
+             return $national;
+         };
+
          $validated = $request->validate([
-             'name' => ['sometimes', 'string', 'max:255'],
+             'name' => ['sometimes', 'string', 'max:255', 'regex:/^([^0-9]*)$/'],
              'email' => [
                  'sometimes',
                  'email',
                  'max:255',
                  Rule::unique('users', 'email')->ignore($user->id),
              ],
-             'phone' => ['sometimes', 'nullable', 'string', 'max:50'],
+             'phone' => [
+                 'sometimes',
+                 'nullable',
+                 'string',
+                 'max:50',
+                 function ($attribute, $value, $fail) use ($normalizeLebanonPhone) {
+                     $national = $normalizeLebanonPhone($value);
+                     if ($national === null) {
+                         return;
+                     }
+
+                     if (strlen($national) === 7) {
+                         if (!preg_match('/^[13456789]\d{6}$/', $national)) {
+                             $fail('Phone number must be a valid Lebanese phone number.');
+                         }
+                         return;
+                     }
+
+                     if (strlen($national) === 8) {
+                         if (!preg_match('/^(70|71|76|78|79|80|81)\d{6}$/', $national)) {
+                             $fail('Phone number must be a valid Lebanese phone number.');
+                         }
+                         return;
+                     }
+
+                     $fail('Phone number must be a valid Lebanese phone number.');
+                 },
+             ],
          ]);
 
          $user->update($validated);
