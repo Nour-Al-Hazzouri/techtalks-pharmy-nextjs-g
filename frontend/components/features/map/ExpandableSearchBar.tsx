@@ -33,17 +33,17 @@ export function ExpandableSearchBar({ onSearch }: ExpandableSearchBarProps) {
     }
 
     return (
-        <div className="relative flex items-center justify-end transition-all duration-300 ease-in-out">
+        <div className="relative flex items-center justify-start transition-all duration-300 ease-in-out w-full">
             {!expanded ? (
                 <button
                     onClick={() => setExpanded(true)}
-                    className="flex items-center gap-2 text-sm font-medium text-[#E91E63] hover:bg-pink-50 px-3 py-1.5 rounded-full transition-colors"
+                    className="flex items-center gap-2 text-sm font-medium text-[#E91E63] hover:bg-pink-50 px-3 py-1.5 rounded-full transition-colors w-full justify-center"
                 >
                     <Search className="h-4 w-4" />
                     <span className="hidden min-[380px]:inline">Search</span>
                 </button>
             ) : (
-                <div className="relative flex items-center w-48 sm:w-64 animate-in fade-in slide-in-from-right-10 duration-200">
+                <div className="relative flex items-center w-full animate-in fade-in slide-in-from-right-10 duration-200">
                     <Search className="absolute left-3 text-gray-400 h-4 w-4" />
                     <Input
                         ref={inputRef}
@@ -55,7 +55,7 @@ export function ExpandableSearchBar({ onSearch }: ExpandableSearchBarProps) {
                             }
                         }}
                         placeholder="Search medicine..."
-                        className="h-9 pl-9 pr-8 rounded-full bg-gray-50 border-gray-200 text-sm focus-visible:ring-1 focus-visible:ring-[#E91E63]"
+                        className="h-9 pl-9 pr-8 rounded-full bg-gray-50 border-gray-200 text-sm focus-visible:ring-1 focus-visible:ring-[#E91E63] w-full"
                         onBlur={() => {
                             // Delay to allow click on results
                             setTimeout(() => {

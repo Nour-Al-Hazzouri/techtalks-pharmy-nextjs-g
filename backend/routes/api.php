@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\GeocodeController;
 use App\Http\Controllers\Api\V1\PharmacyController;
 use App\Http\Controllers\Api\V1\MedicineController;
 use App\Http\Controllers\Api\V1\InventoryController;
@@ -22,6 +23,9 @@ Route::prefix('v1')->group(function () {
     Route::get('medicines/search', [MedicineController::class, 'search']);
     Route::get('medicines/autocomplete', [MedicineController::class, 'autocomplete']);
     Route::get('medicines/nearest', [MedicineController::class, 'nearest']);
+
+    // Geocoding Routes (Public)
+    Route::get('geocode/search', [GeocodeController::class, 'search']);
 
     // Authenticated Routes
     Route::middleware('auth.jwt')->group(function () {

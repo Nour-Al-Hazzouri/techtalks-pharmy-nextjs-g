@@ -3,6 +3,7 @@
 import * as React from "react"
 import dynamic from "next/dynamic"
 import { MapHeader } from "@/components/features/map/MapHeader"
+import { ExpandableSearchBar } from "@/components/features/map/ExpandableSearchBar"
 import { PharmacyList } from "@/components/features/map/PharmacyList"
 import { PharmacyDetails } from "@/components/features/map/PharmacyDetails"
 import { Pharmacy } from "@/lib/mock-data" // Keeping type import for now
@@ -16,7 +17,8 @@ import {
     DrawerTitle,
     DrawerDescription,
 } from "@/components/ui/drawer"
-import { getPharmacies, searchMedicines, PublicPharmacy } from "@/lib/api/public"
+import { findNearestPharmaciesWithMedicine, getPharmacies, searchMedicines, PublicPharmacy } from "@/lib/api/public"
+import { SelectedLocation } from "@/components/features/map/LocationSearchBar"
 
 const PharmacyMap = dynamic(
     () => import("@/components/features/map/PharmacyMap"),
@@ -37,6 +39,7 @@ function mapApiToPharmacy(p: PublicPharmacy, medicine?: { name: string, generic_
         verification_status: p.verification_status,
         total_reports: p.total_reports,
         coordinates: [parseFloat(p.latitude), parseFloat(p.longitude)],
+        distance: p.distance ? parseFloat(p.distance) : undefined,
         availability: medicine ? [
             {
                 name: medicine.name,
@@ -56,6 +59,7 @@ export function MapPageContainer() {
     const [selectedPharmacy, setSelectedPharmacy] = React.useState<Pharmacy | null>(null)
     const [isPanelOpen, setIsPanelOpen] = React.useState(true)
     const [searchQuery, setSearchQuery] = React.useState("")
+    const [location, setLocation] = React.useState<SelectedLocation | null>(null)
     const isDesktop = useMediaQuery("(min-width: 768px)")
     const [snap, setSnap] = React.useState<number | string | null>(0.5)
     const searchParams = useSearchParams()
@@ -101,9 +105,11 @@ export function MapPageContainer() {
         if (!isDesktop) setSnap(0.5)
     }
 
-    const handleSearch = async (term: string) => {
+    const handleSearch = async (term: string, locationOverride?: SelectedLocation | null) => {
         setSearchQuery(term)
         setSelectedPharmacy(null)
+
+        const effectiveLocation = locationOverride !== undefined ? locationOverride : location
 
         if (!term.trim()) {
             // If cleared, fetch all again
@@ -117,7 +123,16 @@ export function MapPageContainer() {
         try {
             setLoading(true)
             const res = await searchMedicines(term)
-            // The search returns medicines, each with pharmacies. 
+
+            if (effectiveLocation && res.data.length > 0) {
+                const primaryMedicine = res.data.find(m => m.name.toLowerCase() === term.toLowerCase()) ?? res.data[0]
+                const nearest = await findNearestPharmaciesWithMedicine({ name: primaryMedicine.name, lat: effectiveLocation.lat, lng: effectiveLocation.lng })
+                const mapped = (nearest.data ?? []).map(p => mapApiToPharmacy(p, primaryMedicine))
+                setPharmacies(mapped)
+                return
+            }
+
+            // The search returns medicines, each with pharmacies.
             // We want to collect ALL pharmacies that have ANY of the matching medicines.
             // And prevent duplicates.
 
@@ -130,7 +145,6 @@ export function MapPageContainer() {
                     } else {
                         const existing = uniquePharmacies.get(String(p.id))!
                         if (existing.availability) {
-                            // Check if this specific medicine is already added
                             if (!existing.availability.some(m => m.name === medicine.name)) {
                                 existing.availability.push({
                                     name: medicine.name,
@@ -204,14 +218,22 @@ export function MapPageContainer() {
         <div className="flex flex-col h-screen overflow-hidden bg-gray-50">
             <MapHeader
                 searchQuery={searchQuery}
-                onSearch={handleSearch}
                 onClear={handleClearSearch}
+                location={location}
+                onLocationSelect={(loc) => {
+                    setLocation(loc)
+                    if (searchQuery) handleSearch(searchQuery, loc)
+                }}
+                onLocationClear={() => {
+                    setLocation(null)
+                    if (searchQuery) handleSearch(searchQuery, null)
+                }}
             />
 
             <main className="flex-1 flex overflow-hidden relative">
                 {/* Map Section */}
                 <div className="flex-1 relative border-r border-gray-200">
-                    <PharmacyMap pharmacies={pharmacies} onSelect={handlePharmacySelect} />
+                    <PharmacyMap pharmacies={pharmacies} onSelect={handlePharmacySelect} center={location ? [location.lat, location.lng] : undefined} />
 
                     {/* Toggle Panel Button (Visible on Map, Desktop Only) */}
                     <button
@@ -234,6 +256,9 @@ export function MapPageContainer() {
                             }
                     `}
                     >
+                        <div className="shrink-0 px-2.5 py-3 border-b border-gray-100">
+                            <ExpandableSearchBar onSearch={(term) => handleSearch(term)} />
+                        </div>
                         {renderPanelContent()}
                     </aside>
                 )}
@@ -254,6 +279,9 @@ export function MapPageContainer() {
                                     <DrawerTitle>Pharmacy Details</DrawerTitle>
                                     <DrawerDescription>List of available pharmacies</DrawerDescription>
                                 </DrawerHeader>
+                                <div className="shrink-0 px-2.5 py-3 border-b border-gray-100 bg-white">
+                                    <ExpandableSearchBar onSearch={(term) => handleSearch(term)} />
+                                </div>
                                 {renderPanelContent()}
                             </div>
                         </DrawerContent>

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Services\MedicineService;
 use App\Traits\ApiResponse;
 use App\Http\Resources\MedicineResource;
+use App\Http\Resources\PharmacyResource;
 use Illuminate\Http\Request;
 
 class MedicineController extends Controller
@@ -51,10 +52,10 @@ class MedicineController extends Controller
             ]);
             
             $results = $this->medicineService->findNearest($request->name, $request->lat, $request->lng);
-            
-            // Helper to format as simple array or resource
-            // Since results are Pharmacy models with pivot
-            return $this->successResponse('Nearest pharmacies having medicine', $results);
+
+            $payload = PharmacyResource::collection($results)->response()->getData(true);
+
+            return $this->successResponse('Nearest pharmacies having medicine', $payload['data'] ?? []);
         } catch (\Exception $e) {
             return $this->errorResponse('Nearest search failed: ' . $e->getMessage(), [], 500);
         }
