@@ -6,6 +6,7 @@ export interface MedicineStock {
     description?: string
     stock: "In Stock" | "Low Stock" | "Out of Stock"
     quantity: string | number
+    price?: number
     expires_at?: string
 }
 
@@ -21,6 +22,7 @@ export interface Pharmacy {
     distance?: number
     coordinates: [number, number] // [lat, lng]
     availability?: MedicineStock[]
+    isCheapest?: boolean
 }
 
 export const MOCK_PHARMACIES: Pharmacy[] = []

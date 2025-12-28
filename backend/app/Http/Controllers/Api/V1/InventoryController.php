@@ -45,7 +45,14 @@ class InventoryController extends Controller
             $pharmacy = $this->pharmacyService->getPharmacyProfile($user);
             if (!$pharmacy) return $this->errorResponse('Pharmacy not found', [], 404);
 
-            $this->medicineService->addInventoryItem($pharmacy, $request->validated());
+            $data = $request->validated();
+            
+            if (isset($data['name']) && !isset($data['medicine_id'])) {
+                 $medicine = $this->medicineService->findOrCreateMedicineByName($data['name']);
+                 $data['medicine_id'] = $medicine->id;
+            }
+
+            $this->medicineService->addInventoryItem($pharmacy, $data);
             return $this->successResponse('Item added to inventory');
         } catch (\Exception $e) {
             return $this->errorResponse('Failed to add item: ' . $e->getMessage(), [], 500);

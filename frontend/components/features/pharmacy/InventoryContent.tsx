@@ -28,13 +28,13 @@ export function InventoryContent() {
             const response = await getInventory()
             const inventoryItems = response.data.data.map((item: InventoryItem) => ({
                 id: `inv-${item.id}`,
-                medicineId: item.medicine_id,
-                name: item.medicine_name,
-                available: item.available,
-                quantity: item.quantity,
-                price: item.price,
-                expiresAt: item.expires_at,
-                updatedAt: item.updated_at,
+                medicineId: item.id, // item.id is the Medicine ID from MedicineResource
+                name: item.name,     // item.name is the Medicine name
+                available: item.pivot?.available ?? false,
+                quantity: item.pivot?.quantity ?? 0,
+                price: item.pivot?.price ? String(item.pivot.price) : "0",
+                expiresAt: null, // MedicineResource doesn't expose this yet? Check pivot.
+                updatedAt: item.pivot?.updated_at ?? "",
             }))
             setItems(inventoryItems)
         } catch (err) {

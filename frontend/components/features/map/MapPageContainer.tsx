@@ -44,14 +44,15 @@ function mapApiToPharmacy(p: PublicPharmacy, medicine?: { name: string, generic_
         total_reports: p.total_reports,
         coordinates: [parseFloat(p.latitude), parseFloat(p.longitude)],
         distance: p.distance ? parseFloat(p.distance) : undefined,
-        availability: medicine ? [
+        availability: (medicine && p.pivot) ? [
             {
                 name: medicine.name,
                 generic_name: medicine.generic_name,
                 category: medicine.category,
                 description: medicine.description,
-                stock: "In Stock",
-                quantity: "Available"
+                stock: p.pivot.available && p.pivot.quantity > 0 ? "In Stock" : "Out of Stock",
+                quantity: p.pivot.quantity > 5 ? "Available" : `${p.pivot.quantity} Left`,
+                price: p.pivot.price
             }
         ] : []
     }
@@ -64,6 +65,7 @@ export function MapPageContainer() {
     const [isPanelOpen, setIsPanelOpen] = React.useState(true)
     const [searchQuery, setSearchQuery] = React.useState("")
     const [location, setLocation] = React.useState<SelectedLocation | null>(null)
+    const [mapCenter, setMapCenter] = React.useState<[number, number] | undefined>(undefined)
     const [activeView, setActiveView] = React.useState<DashboardView>("map")
     const isDesktop = useMediaQuery("(min-width: 768px)")
     const [snap, setSnap] = React.useState<number | string | null>(0.5)
@@ -103,6 +105,9 @@ export function MapPageContainer() {
         setSelectedPharmacy(pharmacy)
         setIsPanelOpen(true)
         if (!isDesktop) setSnap(1)
+
+        // Zoom to pharmacy location
+        setMapCenter(pharmacy.coordinates)
     }
 
     const handleBackToList = () => {
@@ -129,43 +134,66 @@ export function MapPageContainer() {
             setLoading(true)
             const res = await searchMedicines(term)
 
+            let mappedPharmacies: Pharmacy[] = []
+
             if (effectiveLocation && res.data.length > 0) {
                 const primaryMedicine = res.data.find(m => m.name.toLowerCase() === term.toLowerCase()) ?? res.data[0]
                 const nearest = await findNearestPharmaciesWithMedicine({ name: primaryMedicine.name, lat: effectiveLocation.lat, lng: effectiveLocation.lng })
-                const mapped = (nearest.data ?? []).map(p => mapApiToPharmacy(p, primaryMedicine))
-                setPharmacies(mapped)
-                return
-            }
+                mappedPharmacies = (nearest.data ?? []).map(p => mapApiToPharmacy(p, primaryMedicine))
+            } else {
+                // The search returns medicines, each with pharmacies.
+                const uniquePharmacies = new Map<string, Pharmacy>()
 
-            // The search returns medicines, each with pharmacies.
-            // We want to collect ALL pharmacies that have ANY of the matching medicines.
-            // And prevent duplicates.
-
-            const uniquePharmacies = new Map<string, Pharmacy>()
-
-            res.data.forEach(medicine => {
-                medicine.pharmacies.forEach(p => {
-                    if (!uniquePharmacies.has(String(p.id))) {
-                        uniquePharmacies.set(String(p.id), mapApiToPharmacy(p, medicine))
-                    } else {
-                        const existing = uniquePharmacies.get(String(p.id))!
-                        if (existing.availability) {
-                            if (!existing.availability.some(m => m.name === medicine.name)) {
-                                existing.availability.push({
-                                    name: medicine.name,
-                                    generic_name: medicine.generic_name,
-                                    category: medicine.category,
-                                    description: medicine.description,
-                                    stock: "In Stock",
-                                    quantity: "Available"
-                                })
+                res.data.forEach(medicine => {
+                    medicine.pharmacies.forEach(p => {
+                        if (!uniquePharmacies.has(String(p.id))) {
+                            uniquePharmacies.set(String(p.id), mapApiToPharmacy(p, medicine))
+                        } else {
+                            const existing = uniquePharmacies.get(String(p.id))!
+                            if (existing.availability) {
+                                if (!existing.availability.some(m => m.name === medicine.name)) {
+                                    existing.availability.push({
+                                        name: medicine.name,
+                                        generic_name: medicine.generic_name,
+                                        category: medicine.category,
+                                        description: medicine.description,
+                                        stock: "In Stock",
+                                        quantity: "Available",
+                                        price: p.pivot?.price
+                                    })
+                                }
                             }
                         }
+                    })
+                })
+                mappedPharmacies = Array.from(uniquePharmacies.values())
+            }
+
+            // Calculate cheapest pharmacy
+            if (mappedPharmacies.length > 0) {
+                let cheapestPrice = Infinity
+                let cheapestId = ""
+
+                mappedPharmacies.forEach(p => {
+                    // Check availability for the searched term
+                    const stock = p.availability?.find(
+                        item => item.name.toLowerCase().includes(term.toLowerCase()) ||
+                            (item.generic_name && item.generic_name.toLowerCase().includes(term.toLowerCase()))
+                    )
+
+                    if (stock && stock.price !== undefined && stock.price < cheapestPrice) {
+                        cheapestPrice = stock.price
+                        cheapestId = p.id
                     }
                 })
-            })
 
-            setPharmacies(Array.from(uniquePharmacies.values()))
+                mappedPharmacies = mappedPharmacies.map(p => ({
+                    ...p,
+                    isCheapest: p.id === cheapestId
+                }))
+            }
+
+            setPharmacies(mappedPharmacies)
 
         } catch (error) {
             console.error("Search failed", error)
@@ -234,6 +262,15 @@ export function MapPageContainer() {
         return <PharmacyList pharmacies={pharmacies} onSelect={handlePharmacySelect} />
     }
 
+    // Determine center passed to map
+    // If we have a selected location via search bar (SelectedLocation), use that
+    // But if we just clicked a pharmacy (mapCenter), override it?
+    // Actually, `location` (search bar selected) is a preferred starting point, 
+    // but `mapCenter` is an explicit action (clicking a pharmacy).
+    // Let's use `mapCenter` if available, otherwise `location`.
+
+    const finalCenter: [number, number] | undefined = mapCenter ?? (location ? [location.lat, location.lng] : undefined)
+
     return (
         <div className="flex flex-col h-screen overflow-hidden bg-gray-50">
             <MapHeader
@@ -242,10 +279,13 @@ export function MapPageContainer() {
                 location={location}
                 onLocationSelect={(loc) => {
                     setLocation(loc)
+                    // Reset map center so we jump to new search location
+                    setMapCenter(undefined)
                     if (searchQuery) handleSearch(searchQuery, loc)
                 }}
                 onLocationClear={() => {
                     setLocation(null)
+                    setMapCenter(undefined)
                     if (searchQuery) handleSearch(searchQuery, null)
                 }}
                 activeView={activeView}
@@ -255,7 +295,11 @@ export function MapPageContainer() {
             <main className="flex-1 flex overflow-hidden relative">
                 {/* Map Section */}
                 <div className="flex-1 relative border-r border-gray-200">
-                    <PharmacyMap pharmacies={pharmacies} onSelect={handlePharmacySelect} center={location ? [location.lat, location.lng] : undefined} />
+                    <PharmacyMap
+                        pharmacies={pharmacies}
+                        onSelect={handlePharmacySelect}
+                        center={finalCenter}
+                    />
 
                     {/* Toggle Panel Button (Visible on Map, Desktop Only) */}
                     {activeView === "map" && (
@@ -282,7 +326,11 @@ export function MapPageContainer() {
                     >
                         {activeView === "map" && (
                             <div className="shrink-0 px-2.5 py-3 border-b border-gray-100">
-                                <ExpandableSearchBar onSearch={(term) => handleSearch(term)} />
+                                <ExpandableSearchBar
+                                    onSearch={(term) => handleSearch(term)}
+                                    currentQuery={searchQuery}
+                                    onClear={handleClearSearch}
+                                />
                             </div>
                         )}
                         {activeView === "profile" ? (
@@ -314,9 +362,11 @@ export function MapPageContainer() {
                                     <DrawerDescription>List of available pharmacies</DrawerDescription>
                                 </DrawerHeader>
                                 {activeView === "map" && (
-                                    <div className="shrink-0 px-2.5 py-3 border-b border-gray-100 bg-white">
-                                        <ExpandableSearchBar onSearch={(term) => handleSearch(term)} />
-                                    </div>
+                                    <ExpandableSearchBar
+                                        onSearch={(term) => handleSearch(term)}
+                                        currentQuery={searchQuery}
+                                        onClear={handleClearSearch}
+                                    />
                                 )}
                                 {activeView === "profile" ? (
                                     <UserProfilePanel onBackToMap={handleBackToMap} />

@@ -15,8 +15,10 @@ class InventoryRequest extends FormRequest
     {
         $rules = [
             'medicine_id' => 'required_without:name|exists:medicines,id',
+            'name' => 'nullable|string',
             'quantity' => 'required|integer|min:0',
             'price' => 'required|numeric|min:0',
+            'available' => 'boolean',
         ];
 
         if ($this->isMethod('put') || $this->isMethod('patch')) {

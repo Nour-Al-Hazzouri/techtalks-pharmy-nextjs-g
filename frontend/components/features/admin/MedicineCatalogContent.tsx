@@ -1,15 +1,9 @@
 "use client"
 
 import * as React from "react"
-import { Search, Plus, Trash2 } from "lucide-react"
-
-interface Medicine {
-    id: string
-    name: string
-    genericName: string
-    category: string
-    addedDate: string
-}
+import { Search, Plus, Trash2, Loader2 } from "lucide-react"
+import { getMedicines, createMedicine, deleteMedicine, Medicine } from "@/lib/api/admin"
+import { CustomDialog } from "@/components/ui/custom-dialog"
 
 const CATEGORIES = [
     "Pain Relief",
@@ -21,37 +15,35 @@ const CATEGORIES = [
     "Respiratory",
 ]
 
-const MOCK_MEDICINES: Medicine[] = [
-    { id: "1", name: "Paracetamol 500mg", genericName: "Acetaminophen", category: "Pain Relief", addedDate: "Jan 13, 2024" },
-    { id: "2", name: "Amoxicillin", genericName: "Amoxicillin", category: "Antibiotic", addedDate: "Jan 12, 2024" },
-    { id: "3", name: "Aspirin 100mg", genericName: "Acetylsalicylic Acid", category: "Cardiovascular", addedDate: "Jan 8, 2024" },
-    { id: "4", name: "Metformin 500mg", genericName: "Metformin HCl", category: "Diabetes", addedDate: "Jan 25, 2024" },
-    { id: "5", name: "Omeprazole 20mg", genericName: "Omeprazole", category: "Gastrointestinal", addedDate: "Jan 18, 2024" },
-    { id: "6", name: "Amlodipine 5mg", genericName: "Amlodipine Besylate", category: "Cardiovascular", addedDate: "Jan 14, 2024" },
-    { id: "7", name: "Atorvastatin 10mg", genericName: "Atorvastatin Calcium", category: "Cardiovascular", addedDate: "Jan 10, 2024" },
-    { id: "8", name: "Cetirizine 10mg", genericName: "Cetirizine HCl", category: "Antihistamine", addedDate: "Jan 22, 2024" },
-    { id: "9", name: "Salbutamol Inhaler", genericName: "Albuterol", category: "Respiratory", addedDate: "Jan 11, 2024" },
-]
-
 interface AddMedicineModalProps {
     isOpen: boolean
     onClose: () => void
-    onAdd: (medicine: Omit<Medicine, "id" | "addedDate">) => void
+    onAdd: (medicine: any) => Promise<void>
 }
 
 function AddMedicineModal({ isOpen, onClose, onAdd }: AddMedicineModalProps) {
     const [name, setName] = React.useState("")
     const [genericName, setGenericName] = React.useState("")
     const [category, setCategory] = React.useState("")
+    const [description, setDescription] = React.useState("")
+    const [isSubmitting, setIsSubmitting] = React.useState(false)
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        if (name && genericName && category) {
-            onAdd({ name, genericName, category })
-            setName("")
-            setGenericName("")
-            setCategory("")
-            onClose()
+        if (name && category) {
+            setIsSubmitting(true)
+            try {
+                await onAdd({ name, generic_name: genericName, category, description })
+                setName("")
+                setGenericName("")
+                setCategory("")
+                setDescription("")
+                onClose()
+            } catch (error) {
+                console.error("Failed to add medicine", error)
+            } finally {
+                setIsSubmitting(false)
+            }
         }
     }
 
@@ -75,11 +67,12 @@ function AddMedicineModal({ isOpen, onClose, onAdd }: AddMedicineModalProps) {
                     {/* Form */}
                     <div className="px-6 pb-4 md:p-6 space-y-4">
                         <div>
-                            <label className="block text-xs text-gray-500 mb-2">Medicine Name</label>
+                            <label className="block text-xs text-gray-500 mb-2">Medicine Name *</label>
                             <input
                                 type="text"
                                 placeholder="e.g. Insulin Apidra"
                                 value={name}
+                                required
                                 onChange={(e) => setName(e.target.value)}
                                 className="w-full h-12 px-4 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-pink-200 focus:border-[#E91E63]"
                             />
@@ -95,9 +88,10 @@ function AddMedicineModal({ isOpen, onClose, onAdd }: AddMedicineModalProps) {
                             />
                         </div>
                         <div>
-                            <label className="block text-xs text-gray-500 mb-2">Category</label>
+                            <label className="block text-xs text-gray-500 mb-2">Category *</label>
                             <select
                                 value={category}
+                                required
                                 onChange={(e) => setCategory(e.target.value)}
                                 className="w-full h-12 px-4 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-pink-200 focus:border-[#E91E63] appearance-none"
                             >
@@ -106,6 +100,15 @@ function AddMedicineModal({ isOpen, onClose, onAdd }: AddMedicineModalProps) {
                                     <option key={cat} value={cat}>{cat}</option>
                                 ))}
                             </select>
+                        </div>
+                        <div>
+                            <label className="block text-xs text-gray-500 mb-2">Description</label>
+                            <textarea
+                                placeholder="Optional description..."
+                                value={description}
+                                onChange={(e) => setDescription(e.target.value)}
+                                className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-pink-200 focus:border-[#E91E63]"
+                            />
                         </div>
                     </div>
 
@@ -120,9 +123,10 @@ function AddMedicineModal({ isOpen, onClose, onAdd }: AddMedicineModalProps) {
                         </button>
                         <button
                             type="submit"
-                            className="flex-1 py-3.5 rounded-full bg-[#E91E63] text-white font-semibold hover:bg-[#D81B60] transition-colors"
+                            disabled={isSubmitting}
+                            className="flex-1 py-3.5 rounded-full bg-[#E91E63] text-white font-semibold hover:bg-[#D81B60] transition-colors disabled:opacity-50 flex justify-center items-center"
                         >
-                            Add Medicine
+                            {isSubmitting ? <Loader2 className="animate-spin h-5 w-5" /> : "Add Medicine"}
                         </button>
                     </div>
                 </form>
@@ -133,30 +137,120 @@ function AddMedicineModal({ isOpen, onClose, onAdd }: AddMedicineModalProps) {
 
 export function MedicineCatalogContent() {
     const [searchQuery, setSearchQuery] = React.useState("")
-    const [medicines, setMedicines] = React.useState(MOCK_MEDICINES)
+    const [medicines, setMedicines] = React.useState<Medicine[]>([])
     const [isAddModalOpen, setIsAddModalOpen] = React.useState(false)
+    const [isLoading, setIsLoading] = React.useState(true)
+    const [page, setPage] = React.useState(1)
 
-    const filteredMedicines = medicines.filter(
-        (m) =>
-            m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            m.genericName.toLowerCase().includes(searchQuery.toLowerCase())
-    )
+    // Alert & Confirm State
+    const [alertConfig, setAlertConfig] = React.useState<{ isOpen: boolean, title: string, description?: string, variant?: "default" | "destructive" }>({
+        isOpen: false,
+        title: "",
+    })
 
-    const handleAddMedicine = (medicine: Omit<Medicine, "id" | "addedDate">) => {
-        const newMedicine: Medicine = {
-            ...medicine,
-            id: `new-${Date.now()}`,
-            addedDate: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+    const [confirmConfig, setConfirmConfig] = React.useState<{ isOpen: boolean, title: string, onConfirm: () => void }>({
+        isOpen: false,
+        title: "",
+        onConfirm: () => { },
+    })
+
+    // Debounce search
+    React.useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            fetchMedicines()
+        }, 500)
+        return () => clearTimeout(timeoutId)
+    }, [searchQuery, page])
+
+    const fetchMedicines = async () => {
+        setIsLoading(true)
+        try {
+            const response = await getMedicines(page, searchQuery)
+            if (response.data && Array.isArray(response.data.data)) {
+                setMedicines(response.data.data)
+            }
+        } catch (error) {
+            console.error("Failed to fetch medicines", error)
+        } finally {
+            setIsLoading(false)
         }
-        setMedicines((prev) => [newMedicine, ...prev])
     }
 
-    const handleDeleteMedicine = (id: string) => {
-        setMedicines((prev) => prev.filter((m) => m.id !== id))
+    const handleAddMedicine = async (medicineData: any) => {
+        try {
+            const response = await createMedicine(medicineData)
+            if (response.status) {
+                fetchMedicines() // Refresh list
+                setAlertConfig({
+                    isOpen: true,
+                    title: "Success",
+                    description: "Medicine added successfully.",
+                })
+            } else {
+                setAlertConfig({
+                    isOpen: true,
+                    title: "Failed to Add",
+                    description: response.message || "Failed to add medicine",
+                    variant: "destructive"
+                })
+            }
+        } catch (err: any) {
+            console.error("Add failed", err)
+            const msg = err?.data?.message || err.message || "Failed to add medicine. It may already exist."
+            setAlertConfig({
+                isOpen: true,
+                title: "Error",
+                description: msg,
+                variant: "destructive"
+            })
+        }
+    }
+
+    const handleDeleteMedicine = (id: number) => {
+        setConfirmConfig({
+            isOpen: true,
+            title: "Delete Medicine?",
+            onConfirm: async () => {
+                try {
+                    await deleteMedicine(id)
+                    setMedicines((prev) => prev.filter((m) => m.id !== id))
+                    setAlertConfig({
+                        isOpen: true,
+                        title: "Deleted",
+                        description: "Medicine removed successfully.",
+                    })
+                } catch (error) {
+                    console.error("Failed to delete", error)
+                    setAlertConfig({
+                        isOpen: true,
+                        title: "Error",
+                        description: "Failed to delete medicine.",
+                        variant: "destructive"
+                    })
+                }
+            }
+        })
     }
 
     return (
         <div className="flex-1 bg-gray-50 px-4 py-4 pt-20 pb-24 md:p-6 md:pt-6 md:pb-6 overflow-auto">
+            <CustomDialog
+                isOpen={alertConfig.isOpen}
+                onClose={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
+                title={alertConfig.title}
+                description={alertConfig.description}
+                variant={alertConfig.variant}
+            />
+
+            <CustomDialog
+                isOpen={confirmConfig.isOpen}
+                onClose={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}
+                title={confirmConfig.title}
+                confirmLabel="Delete"
+                variant="destructive"
+                onConfirm={confirmConfig.onConfirm}
+            />
+
             {/* Header */}
             <h1 className="text-lg font-bold text-gray-900 tracking-wider mb-6">
                 MEDICINE CATALOG
@@ -174,7 +268,7 @@ export function MedicineCatalogContent() {
                         className="w-full h-12 pl-12 pr-4 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-pink-200 focus:border-[#E91E63]"
                     />
                 </div>
-                {/* Add Button - Full width on mobile, inline on desktop */}
+                {/* Add Button */}
                 <button
                     onClick={() => setIsAddModalOpen(true)}
                     className="w-full md:w-auto h-12 px-6 bg-[#E91E63] text-white font-semibold rounded-full md:rounded-xl hover:bg-[#D81B60] transition-colors flex items-center justify-center gap-2 shrink-0 mb-6 md:mb-0"
@@ -184,30 +278,43 @@ export function MedicineCatalogContent() {
                 </button>
             </div>
 
-            {/* Medicine List - Single column on mobile, 3 columns on desktop */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {filteredMedicines.map((medicine) => (
-                    <div
-                        key={medicine.id}
-                        className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 relative"
-                    >
-                        <button
-                            onClick={() => handleDeleteMedicine(medicine.id)}
-                            className="absolute top-4 right-4 h-8 w-8 rounded-lg bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-100 transition-colors"
+            {/* Medicine List */}
+            {isLoading ? (
+                <div className="flex justify-center py-10">
+                    <Loader2 className="animate-spin h-8 w-8 text-[#E91E63]" />
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {medicines.map((medicine) => (
+                        <div
+                            key={medicine.id}
+                            className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 relative"
                         >
-                            <Trash2 className="h-4 w-4" />
-                        </button>
-                        <h3 className="text-sm font-semibold text-gray-900 mb-1 pr-10">
-                            {medicine.name}
-                        </h3>
-                        <p className="text-xs text-gray-500 mb-3">{medicine.genericName}</p>
-                        <span className="inline-block px-3 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded-full mb-3 md:mb-4">
-                            {medicine.category}
-                        </span>
-                        <p className="text-xs text-gray-400">Added on {medicine.addedDate}</p>
-                    </div>
-                ))}
-            </div>
+                            <button
+                                onClick={() => handleDeleteMedicine(medicine.id)}
+                                className="absolute top-4 right-4 h-8 w-8 rounded-lg bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-100 transition-colors"
+                            >
+                                <Trash2 className="h-4 w-4" />
+                            </button>
+                            <h3 className="text-sm font-semibold text-gray-900 mb-1 pr-10">
+                                {medicine.name}
+                            </h3>
+                            <p className="text-xs text-gray-500 mb-3">{medicine.generic_name || "N/A"}</p>
+                            <span className="inline-block px-3 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded-full mb-3 md:mb-4">
+                                {medicine.category || "General"}
+                            </span>
+                            <p className="text-xs text-gray-400">
+                                Added on {medicine.created_at ? new Date(medicine.created_at).toLocaleDateString() : "N/A"}
+                            </p>
+                        </div>
+                    ))}
+                    {medicines.length === 0 && (
+                        <div className="col-span-full text-center py-10 text-gray-500">
+                            No medicines found.
+                        </div>
+                    )}
+                </div>
+            )}
 
             {/* Add Medicine Modal */}
             <AddMedicineModal

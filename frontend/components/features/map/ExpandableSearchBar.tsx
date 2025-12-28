@@ -1,19 +1,32 @@
 "use client"
 
 import * as React from "react"
-import { Search, X } from "lucide-react"
+import { Search, X, Loader2 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
-import { MOCK_MEDICINES } from "@/lib/mock-data"
+import { autocompleteMedicines } from "@/lib/api/public"
 
 interface ExpandableSearchBarProps {
     onSearch?: (term: string) => void
+    currentQuery?: string
+    onClear?: () => void
 }
 
-export function ExpandableSearchBar({ onSearch }: ExpandableSearchBarProps) {
+export function ExpandableSearchBar({ onSearch, currentQuery = "", onClear }: ExpandableSearchBarProps) {
     const [expanded, setExpanded] = React.useState(false)
     const [query, setQuery] = React.useState("")
+    const [results, setResults] = React.useState<string[]>([])
+    const [isLoading, setIsLoading] = React.useState(false)
     const inputRef = React.useRef<HTMLInputElement>(null)
+
+    React.useEffect(() => {
+        if (currentQuery) {
+            setQuery(currentQuery)
+            setExpanded(true)
+        } else if (!expanded) {
+            setQuery("")
+        }
+    }, [currentQuery])
 
     React.useEffect(() => {
         if (expanded && inputRef.current) {
@@ -21,15 +34,59 @@ export function ExpandableSearchBar({ onSearch }: ExpandableSearchBarProps) {
         }
     }, [expanded])
 
+    React.useEffect(() => {
+        const fetchAutocomplete = async () => {
+            if (query.length < 2) {
+                setResults([])
+                return
+            }
+
+            // Don't autocomplete if query matches current confirmed search exactly
+            if (query === currentQuery) return
+
+            setIsLoading(true)
+            try {
+                const response = await autocompleteMedicines(query)
+                if (response.data) {
+                    const flatResults: string[] = []
+                    Object.values(response.data).forEach(group => {
+                        group.forEach(item => {
+                            if (!flatResults.includes(item.name)) {
+                                flatResults.push(item.name)
+                            }
+                        })
+                    })
+                    setResults(flatResults.slice(0, 5))
+                }
+            } catch (error) {
+                console.error("Autocomplete failed:", error)
+            } finally {
+                setIsLoading(false)
+            }
+        }
+
+        const timeoutId = setTimeout(fetchAutocomplete, 300)
+        return () => clearTimeout(timeoutId)
+    }, [query, currentQuery])
+
     const handleSearch = (term: string) => {
         if (onSearch) {
             onSearch(term)
-            setExpanded(false) // Collapse on search? optional. Let's keep it open or close depending on UX. 
-            // User requirement: "Return to main search screen" was cleared, now filtering.
-            // Let's close it to show the header text update.
-            setExpanded(false)
-            setQuery("") // Clear input since it moves to header "Searching for..."
+            // Keep expanded to show the result
+            setExpanded(true)
+            setResults([])
         }
+    }
+
+    const handleClear = () => {
+        setQuery("")
+        setResults([])
+        if (inputRef.current) inputRef.current.focus()
+
+        if (onClear) onClear()
+
+        // If we are just clearing text but not closing (user might want to type new search)
+        // But if it was an active search (currentQuery), we called onClear which resets parent.
     }
 
     return (
@@ -59,26 +116,30 @@ export function ExpandableSearchBar({ onSearch }: ExpandableSearchBarProps) {
                         onBlur={() => {
                             // Delay to allow click on results
                             setTimeout(() => {
-                                if (!query) setExpanded(false)
+                                if (!query && !results.length) setExpanded(false)
                             }, 200)
                         }}
                     />
+                    {isLoading && (
+                        <div className="absolute right-8 top-1/2 -translate-y-1/2">
+                            <Loader2 className="h-3 w-3 animate-spin text-gray-400" />
+                        </div>
+                    )}
                     <button
                         onMouseDown={(e) => {
                             e.preventDefault()
-                            setQuery("")
-                            setExpanded(false)
+                            handleClear()
                         }}
                         className="absolute right-2 p-1 text-gray-400 hover:text-gray-600 rounded-full"
                     >
                         <X className="h-3 w-3" />
                     </button>
 
-                    {/* Minimal Autocomplete */}
-                    {query.length > 0 && (
+                    {/* Autocomplete */}
+                    {results.length > 0 && query.length > 0 && (
                         <div className="absolute top-full right-0 left-0 mt-2 bg-white shadow-lg rounded-xl border border-gray-100 p-2 z-50">
                             <div className="px-2 py-1.5 text-xs text-gray-500 font-medium">Results</div>
-                            {MOCK_MEDICINES.filter(i => i.toLowerCase().includes(query.toLowerCase())).map(item => (
+                            {results.map(item => (
                                 <div
                                     key={item}
                                     onClick={() => handleSearch(item)}

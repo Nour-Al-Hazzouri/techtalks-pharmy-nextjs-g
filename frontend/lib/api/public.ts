@@ -20,6 +20,11 @@ export interface PublicPharmacy {
     rating: string | null;
     total_reports: number;
     distance?: string;
+    pivot?: {
+        quantity: number;
+        price: number;
+        available: boolean;
+    };
 }
 
 export interface SearchedMedicine {
@@ -56,6 +61,10 @@ export async function getPharmacies(params?: { verified?: '0' | '1', status?: st
  */
 export async function searchMedicines(query: string): Promise<ApiResponse<SearchedMedicine[]>> {
     return apiFetch<ApiResponse<SearchedMedicine[]>>(`/medicines/search?name=${encodeURIComponent(query)}`);
+}
+
+export async function autocompleteMedicines(query: string): Promise<ApiResponse<Record<string, { name: string, category: string }[]>>> {
+    return apiFetch<ApiResponse<Record<string, { name: string, category: string }[]>>>(`/medicines/autocomplete?query=${encodeURIComponent(query)}`);
 }
 
 export async function findNearestPharmaciesWithMedicine(params: { name: string; lat: number; lng: number }): Promise<ApiResponse<PublicPharmacy[]>> {

@@ -9,17 +9,17 @@ import { renderToString } from 'react-dom/server'
 import { Pill } from "lucide-react"
 
 // Create custom icons using DivIcon and SVG
-const createPharmacyIcon = () => {
-    const color = "#E91E63" // Brand pink
+const createPharmacyIcon = (isCheapest?: boolean) => {
+    const color = isCheapest ? "#10B981" : "#E91E63" // Green for cheapest, Brand pink for others
 
     // Render the Lucide icon to a string
     const iconHtml = renderToString(
         <div className="relative flex flex-col items-center justify-center translate-y-[-50%]">
-            <div className={`w-8 h-8 rounded-full bg-white shadow-md flex items-center justify-center border-2 border-[#E91E63]`}>
-                <Pill className={`w-4 h-4 text-[#E91E63]`} />
+            <div className={`w-8 h-8 rounded-full bg-white shadow-md flex items-center justify-center border-2`} style={{ borderColor: color }}>
+                <Pill className={`w-4 h-4`} style={{ color: color }} />
             </div>
             {/* Tiny triangle for the pin tip */}
-            <div className={`w-2 h-2 rotate-45 transform -mt-1 bg-[#E91E63]`}></div>
+            <div className={`w-2 h-2 rotate-45 transform -mt-1`} style={{ backgroundColor: color }}></div>
         </div>
     )
 
@@ -43,7 +43,8 @@ function RecenterMap({ center }: { center?: [number, number] }) {
 
     useEffect(() => {
         if (!center) return
-        map.setView(center, map.getZoom(), { animate: true })
+        // Zoom to level 16 when focusing on a specific location (pharmacy)
+        map.setView(center, 16, { animate: true })
     }, [center, map])
 
     return null
@@ -77,7 +78,7 @@ export default function PharmacyMap({ pharmacies, onSelect, center }: PharmacyMa
                 <Marker
                     key={pharmacy.id}
                     position={pharmacy.coordinates}
-                    icon={createPharmacyIcon()}
+                    icon={createPharmacyIcon(pharmacy.isCheapest)}
                     eventHandlers={{
                         click: () => {
                             onSelect(pharmacy)
