@@ -70,13 +70,6 @@ export function MapHeader({
                                 <span className="font-medium text-gray-700">{searchQuery}</span>
                             </p>
                         </div>
-                        <button
-                            onClick={onClear}
-                            className="p-1 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600 transition-colors shrink-0"
-                            title="Clear Search"
-                        >
-                            <X className="h-4 w-4" />
-                        </button>
                     </div>
                 ) : (
                     <div className="min-w-0 flex-1">
@@ -110,8 +103,7 @@ export function MapHeader({
                                         setMobileMenuOpen(false)
                                     }}
                                     className={
-                                        `w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-gray-50 ${
-                                            activeView === item.key ? "text-[#E91E63]" : "text-gray-700"
+                                        `w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-gray-50 ${activeView === item.key ? "text-[#E91E63]" : "text-gray-700"
                                         }`
                                     }
                                 >

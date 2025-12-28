@@ -22,6 +22,7 @@ export interface Pharmacy {
     distance?: number
     coordinates: [number, number] // [lat, lng]
     availability?: MedicineStock[]
+    isCheapest?: boolean
 }
 
 export const MOCK_PHARMACIES: Pharmacy[] = []

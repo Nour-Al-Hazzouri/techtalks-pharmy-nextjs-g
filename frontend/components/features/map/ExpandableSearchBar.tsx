@@ -8,14 +8,25 @@ import { autocompleteMedicines } from "@/lib/api/public"
 
 interface ExpandableSearchBarProps {
     onSearch?: (term: string) => void
+    currentQuery?: string
+    onClear?: () => void
 }
 
-export function ExpandableSearchBar({ onSearch }: ExpandableSearchBarProps) {
+export function ExpandableSearchBar({ onSearch, currentQuery = "", onClear }: ExpandableSearchBarProps) {
     const [expanded, setExpanded] = React.useState(false)
     const [query, setQuery] = React.useState("")
     const [results, setResults] = React.useState<string[]>([])
     const [isLoading, setIsLoading] = React.useState(false)
     const inputRef = React.useRef<HTMLInputElement>(null)
+
+    React.useEffect(() => {
+        if (currentQuery) {
+            setQuery(currentQuery)
+            setExpanded(true)
+        } else if (!expanded) {
+            setQuery("")
+        }
+    }, [currentQuery])
 
     React.useEffect(() => {
         if (expanded && inputRef.current) {
@@ -29,6 +40,9 @@ export function ExpandableSearchBar({ onSearch }: ExpandableSearchBarProps) {
                 setResults([])
                 return
             }
+
+            // Don't autocomplete if query matches current confirmed search exactly
+            if (query === currentQuery) return
 
             setIsLoading(true)
             try {
@@ -53,14 +67,26 @@ export function ExpandableSearchBar({ onSearch }: ExpandableSearchBarProps) {
 
         const timeoutId = setTimeout(fetchAutocomplete, 300)
         return () => clearTimeout(timeoutId)
-    }, [query])
+    }, [query, currentQuery])
 
     const handleSearch = (term: string) => {
         if (onSearch) {
             onSearch(term)
-            setExpanded(false)
-            setQuery("")
+            // Keep expanded to show the result
+            setExpanded(true)
+            setResults([])
         }
+    }
+
+    const handleClear = () => {
+        setQuery("")
+        setResults([])
+        if (inputRef.current) inputRef.current.focus()
+
+        if (onClear) onClear()
+
+        // If we are just clearing text but not closing (user might want to type new search)
+        // But if it was an active search (currentQuery), we called onClear which resets parent.
     }
 
     return (
@@ -102,8 +128,7 @@ export function ExpandableSearchBar({ onSearch }: ExpandableSearchBarProps) {
                     <button
                         onMouseDown={(e) => {
                             e.preventDefault()
-                            setQuery("")
-                            setExpanded(false)
+                            handleClear()
                         }}
                         className="absolute right-2 p-1 text-gray-400 hover:text-gray-600 rounded-full"
                     >
