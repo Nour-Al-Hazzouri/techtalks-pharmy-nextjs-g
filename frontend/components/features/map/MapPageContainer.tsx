@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/drawer"
 import { findNearestPharmaciesWithMedicine, getPharmacies, searchMedicines, PublicPharmacy } from "@/lib/api/public"
 import { SelectedLocation } from "@/components/features/map/LocationSearchBar"
+import { CustomDialog, AlertConfig } from "@/components/ui/custom-dialog"
 
 const PharmacyMap = dynamic(
     () => import("@/components/features/map/PharmacyMap"),
@@ -69,6 +70,8 @@ export function MapPageContainer() {
     const [activeView, setActiveView] = React.useState<DashboardView>("map")
     const isDesktop = useMediaQuery("(min-width: 768px)")
     const [snap, setSnap] = React.useState<number | string | null>(0.5)
+    const [userLocation, setUserLocation] = React.useState<[number, number] | null>(null)
+    const [alertConfig, setAlertConfig] = React.useState<AlertConfig>({ isOpen: false, title: "", description: "" })
     const searchParams = useSearchParams()
 
     // Fetch initial pharmacies (all)
@@ -110,9 +113,36 @@ export function MapPageContainer() {
         setMapCenter(pharmacy.coordinates)
     }
 
+
     const handleBackToList = () => {
         setSelectedPharmacy(null)
         if (!isDesktop) setSnap(0.5)
+    }
+
+    const handleLocateMe = () => {
+        // User requested manual location only
+        // Center on Tripoli as a default starting point
+        setMapCenter([34.4367, 35.8497])
+        setAlertConfig({
+            isOpen: true,
+            title: "Set Your Location",
+            description: "Please click precisely on the map to pin your exact location.",
+        })
+    }
+
+    const handleMapClick = (coords: [number, number]) => {
+        const [lat, lng] = coords
+        const newLoc: SelectedLocation = {
+            label: "Pinned Location",
+            lat,
+            lng
+        }
+        setLocation(newLoc)
+        setUserLocation(coords)
+
+        if (searchQuery) {
+            handleSearch(searchQuery, newLoc)
+        }
     }
 
     const handleSearch = async (term: string, locationOverride?: SelectedLocation | null) => {
@@ -281,15 +311,19 @@ export function MapPageContainer() {
                     setLocation(loc)
                     // Reset map center so we jump to new search location
                     setMapCenter(undefined)
+                    // Clear precise user location (blue pin) when searching for a general area (city)
+                    setUserLocation(null)
                     if (searchQuery) handleSearch(searchQuery, loc)
                 }}
                 onLocationClear={() => {
                     setLocation(null)
                     setMapCenter(undefined)
+                    setUserLocation(null)
                     if (searchQuery) handleSearch(searchQuery, null)
                 }}
                 activeView={activeView}
                 onViewChange={handleViewChange}
+                onLocate={handleLocateMe}
             />
 
             <main className="flex-1 flex overflow-hidden relative">
@@ -299,6 +333,8 @@ export function MapPageContainer() {
                         pharmacies={pharmacies}
                         onSelect={handlePharmacySelect}
                         center={finalCenter}
+                        userLocation={userLocation}
+                        onMapClick={handleMapClick}
                     />
 
                     {/* Toggle Panel Button (Visible on Map, Desktop Only) */}
@@ -382,6 +418,10 @@ export function MapPageContainer() {
                     </Drawer>
                 )}
             </main>
+            <CustomDialog
+                {...alertConfig}
+                onClose={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
+            />
         </div>
     )
 }
