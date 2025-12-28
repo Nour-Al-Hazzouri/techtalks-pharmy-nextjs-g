@@ -81,6 +81,8 @@ Route::prefix('v1')->group(function () {
              Route::get('admin/reports/{id}', [ReportController::class, 'show']);
              Route::put('admin/reports/{id}/status', [ReportController::class, 'updateStatus']);
              
+             // Admin Medicine Management
+             Route::apiResource('admin/medicines', \App\Http\Controllers\Api\V1\AdminMedicineController::class);
         });
     });
 });

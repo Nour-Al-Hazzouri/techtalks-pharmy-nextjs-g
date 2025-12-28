@@ -8,8 +8,8 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { useDebounce } from "@/hooks/use-debounce"
-import { MOCK_MEDICINES, POPULAR_SEARCHES } from "@/lib/mock-data"
-
+import { POPULAR_SEARCHES } from "@/lib/mock-data"
+import { autocompleteMedicines } from "@/lib/api/public"
 
 export function MedicineSearchBar() {
     const router = useRouter()
@@ -21,22 +21,37 @@ export function MedicineSearchBar() {
     const debouncedQuery = useDebounce(query, 300)
 
     React.useEffect(() => {
-        if (debouncedQuery.length < 3) {
-            setResults([])
-            setShowResults(false)
-            return
+        const fetchAutocomplete = async () => {
+            if (debouncedQuery.length < 2) {
+                setResults([])
+                setShowResults(false)
+                return
+            }
+
+            setIsLoading(true)
+            try {
+                const response = await autocompleteMedicines(debouncedQuery)
+                if (response.data) {
+                    // Flatten the grouped response directly to strings for the dropdown
+                    const flatResults: string[] = []
+                    Object.values(response.data).forEach(group => {
+                        group.forEach(item => {
+                            if (!flatResults.includes(item.name)) {
+                                flatResults.push(item.name)
+                            }
+                        })
+                    })
+                    setResults(flatResults.slice(0, 10)) // Limit to 10
+                    setShowResults(true)
+                }
+            } catch (error) {
+                console.error("Autocomplete failed:", error)
+            } finally {
+                setIsLoading(false)
+            }
         }
 
-        setIsLoading(true)
-        // Simulate API call
-        setTimeout(() => {
-            const filtered = MOCK_MEDICINES.filter((medicine) =>
-                medicine.toLowerCase().includes(debouncedQuery.toLowerCase())
-            )
-            setResults(filtered)
-            setIsLoading(false)
-            setShowResults(true)
-        }, 500)
+        fetchAutocomplete()
     }, [debouncedQuery])
 
     const handleSearch = (term: string) => {

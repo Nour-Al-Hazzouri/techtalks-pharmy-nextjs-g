@@ -44,14 +44,15 @@ function mapApiToPharmacy(p: PublicPharmacy, medicine?: { name: string, generic_
         total_reports: p.total_reports,
         coordinates: [parseFloat(p.latitude), parseFloat(p.longitude)],
         distance: p.distance ? parseFloat(p.distance) : undefined,
-        availability: medicine ? [
+        availability: (medicine && p.pivot) ? [
             {
                 name: medicine.name,
                 generic_name: medicine.generic_name,
                 category: medicine.category,
                 description: medicine.description,
-                stock: "In Stock",
-                quantity: "Available"
+                stock: p.pivot.available && p.pivot.quantity > 0 ? "In Stock" : "Out of Stock",
+                quantity: p.pivot.quantity > 5 ? "Available" : `${p.pivot.quantity} Left`,
+                price: p.pivot.price
             }
         ] : []
     }

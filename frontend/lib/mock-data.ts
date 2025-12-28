@@ -6,6 +6,7 @@ export interface MedicineStock {
     description?: string
     stock: "In Stock" | "Low Stock" | "Out of Stock"
     quantity: string | number
+    price?: number
     expires_at?: string
 }
 

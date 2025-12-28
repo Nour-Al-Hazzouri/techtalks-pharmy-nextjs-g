@@ -31,13 +31,13 @@ export interface PharmacyProfile {
 
 export interface InventoryItem {
     id: number;
-    medicine_id: number;
-    medicine_name: string;
-    quantity: number;
-    price: string;
-    available: boolean;
-    expires_at: string | null;
-    updated_at: string;
+    name: string;
+    pivot: {
+        quantity: number;
+        price: number;
+        available: boolean;
+        updated_at?: string;
+    }
 }
 
 export interface PaginatedResponse<T> {
@@ -96,50 +96,32 @@ export async function addInventoryItem(data: {
     name: string;
     quantity: number;
     price: number;
-    expires_at?: string;
 }): Promise<ApiResponse<unknown>> {
-    // Construct a single-item CSV
-    const header = "medicine_name,quantity,price";
-    const safeName = data.name.includes(',') ? `"${data.name}"` : data.name;
-    const row = `${safeName},${data.quantity},${data.price}`;
-    const csvContent = `${header}\n${row}`;
+    // If we have a name, we likely want to find the ID first or let backend handle it.
+    // However, backend InventoryController@store requires 'medicine_id' if 'name' is not present?
+    // Looking at request logic: 'medicine_id' => 'required_without:name'.
+    // So we CAN pass 'name' if we want backend to resolve it (if we updated backend to support it).
+    // BUT, the user wants us to select from DB. 
+    // The PharmacyMedicineSearch gives us a name. The most robust way is to lookup the ID.
+    // But since public autocomplete doesn't return IDs easily (grouped response), 
+    // let's rely on the backend finding it by name which `InventoryController` (store) doesn't natively support yet?
+    // Wait, `InventoryRequest` has `medicine_id` required without name.
+    // Does `InventoryController` use name?
+    // `store` calls `medicineService->addInventoryItem`. 
+    // `MedicineService` expects `medicine_id` in data for `inventoryRepo->updateStock`.
 
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const file = new File([blob], 'single_add.csv', { type: 'text/csv' });
+    // We need to resolve name to ID or send ID.
+    // For now, let's assume we send name and backend needs to handle it OR we assume frontend resolves it.
+    // The previous CSV upload logic did `findOrCreateMedicineByName`.
 
-    const formData = new FormData();
-    formData.append('file', file);
+    // Let's modify this to send JSON.
+    // We will update backend InventoryRequest to allow `name` and resolve it in Controller if needed.
+    // For now, sending as JSON to `/pharmacy/inventory`.
 
-    // Manual fetch still needed for FormData, but we can use a helper or just get token here
-    // However, since we refactored config.ts, it's better to keep it clean.
-    // I'll leave the manual token here for NOW as it uses fetch() directly with FormData, 
-    // unless I refactor apiFetch to support FormData.
-    const getAuthToken = () => {
-        if (typeof document === 'undefined') return null;
-        const match = document.cookie.match(/auth_token=([^;]+)/);
-        return match ? match[1] : null;
-    };
-
-    const token = getAuthToken();
-    const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
-
-    const response = await fetch(`${API_BASE_URL}/pharmacy/inventory/upload`, {
+    return apiFetch<ApiResponse<unknown>>('/pharmacy/inventory', {
         method: 'POST',
-        headers: headers,
-        body: formData
+        body: JSON.stringify(data)
     });
-
-    const resData = await response.json();
-
-    if (!response.ok) {
-        throw new ApiError(
-            resData.message || 'An error occurred during add',
-            response.status,
-            resData.errors || null
-        );
-    }
-
-    return resData;
 }
 
 export async function updateInventoryItem(id: number, data: {

@@ -48,9 +48,50 @@ export async function approvePharmacy(id: number | string): Promise<ApiResponse<
 /**
  * Reject pharmacy
  */
+
+/**
+ * Reject pharmacy
+ */
 export async function rejectPharmacy(id: number | string, reason: string): Promise<ApiResponse<any>> {
     return apiFetch<ApiResponse<any>>(`/admin/pharmacies/${id}/reject`, {
         method: 'PUT',
         body: JSON.stringify({ reason })
+    });
+}
+
+// --- Medicines ---
+
+export interface Medicine {
+    id: number;
+    name: string;
+    generic_name?: string;
+    category?: string;
+    description?: string;
+    created_at?: string;
+    updated_at?: string;
+}
+
+export async function getMedicines(page = 1, search = ""): Promise<ApiResponse<PaginatedResponse<Medicine>>> {
+    const query = search ? `&search=${encodeURIComponent(search)}` : "";
+    return apiFetch<ApiResponse<PaginatedResponse<Medicine>>>(`/admin/medicines?page=${page}${query}`);
+}
+
+export async function createMedicine(data: Partial<Medicine>): Promise<ApiResponse<Medicine>> {
+    return apiFetch<ApiResponse<Medicine>>('/admin/medicines', {
+        method: 'POST',
+        body: JSON.stringify(data)
+    });
+}
+
+export async function updateMedicine(id: number, data: Partial<Medicine>): Promise<ApiResponse<Medicine>> {
+    return apiFetch<ApiResponse<Medicine>>(`/admin/medicines/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data)
+    });
+}
+
+export async function deleteMedicine(id: number): Promise<ApiResponse<any>> {
+    return apiFetch<ApiResponse<any>>(`/admin/medicines/${id}`, {
+        method: 'DELETE'
     });
 }
