@@ -21,7 +21,8 @@ return [
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
-        env('FRONTEND_URL', 'https://techtalks-pharmy.netlify.app'), 
+        'https://techtalks-pharmy.netlify.app',
+        'https://techtalks-pharmy.netlify.app/',
         'http://localhost:3000',
     ],
 
