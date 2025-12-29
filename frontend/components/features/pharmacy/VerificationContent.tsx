@@ -357,7 +357,7 @@ export function VerificationContent() {
                                             disabled={!!uploading || profile?.verification_status === 'pending' || profile?.verification_status === 'verified'}
                                         />
                                     </label>
-                                    {isUploaded && profile?.verification_status !== 'pending' && (
+                                    {isUploaded && profile?.verification_status !== 'pending' && profile?.verification_status !== 'verified' && (
                                         <button
                                             onClick={() => {
                                                 const doc = documents.find(d => d.doc_type === type);
@@ -404,7 +404,7 @@ export function VerificationContent() {
                                             </div>
                                         </div>
                                     </div>
-                                    {profile?.verification_status !== 'pending' && (
+                                    {profile?.verification_status !== 'pending' && profile?.verification_status !== 'verified' && (
                                         <button
                                             onClick={() => handleDeleteDocument(doc.id)}
                                             className="h-9 w-9 rounded-xl hover:bg-red-50 flex items-center justify-center text-gray-400 hover:text-red-500 transition-all"

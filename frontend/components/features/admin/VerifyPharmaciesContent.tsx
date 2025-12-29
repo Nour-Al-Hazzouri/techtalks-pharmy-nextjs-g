@@ -231,25 +231,78 @@ function VerificationModal({ pharmacy, isOpen, onClose, onApprove, onReject, onV
                 </div>
 
                 {/* Footer Actions */}
-                <div className="p-6 bg-gray-50 border-t border-gray-100 flex items-center gap-3">
+                <div className="p-6 bg-gray-50 border-t border-gray-100 flex flex-col-reverse md:flex-row md:items-center gap-3">
                     <button
                         onClick={onClose}
-                        className="text-gray-500 font-bold hover:bg-gray-100 h-12 px-6 rounded-2xl transition-all"
+                        className="w-full md:w-auto text-gray-500 font-bold hover:bg-gray-100 h-12 px-6 rounded-2xl transition-all"
                     >
                         Cancel
                     </button>
-                    <div className="flex-1" />
+                    <div className="hidden md:block flex-1" />
                     <button
                         onClick={() => onReject(pharmacy.id)}
-                        className="h-12 px-6 rounded-2xl border-2 border-gray-200 text-gray-600 h-12 px-6 rounded-2xl font-bold hover:bg-white hover:border-red-200 hover:text-red-600 transition-all"
+                        className="w-full md:w-auto h-12 px-6 rounded-2xl border-2 border-gray-200 text-gray-600 font-bold hover:bg-white hover:border-red-200 hover:text-red-600 transition-all"
                     >
                         Reject
                     </button>
                     <button
                         onClick={() => onApprove(pharmacy.id)}
-                        className="bg-black text-white hover:bg-[#E91E63] font-black italic h-12 px-8 rounded-2xl shadow-xl shadow-black/10 transition-all active:scale-95"
+                        className="w-full md:w-auto bg-black text-white hover:bg-[#E91E63] font-black italic h-12 px-8 rounded-2xl shadow-xl shadow-black/10 transition-all active:scale-95"
                     >
                         APPROVE & VERIFY
+                    </button>
+                </div>
+            </div>
+        </div>
+    )
+}
+
+interface RejectionModalProps {
+    isOpen: boolean
+    onClose: () => void
+    onConfirm: (reason: string) => void
+}
+
+function RejectionModal({ isOpen, onClose, onConfirm }: RejectionModalProps) {
+    const [reason, setReason] = React.useState("")
+
+    if (!isOpen) return null
+
+    const handleSubmit = () => {
+        if (reason.trim()) {
+            onConfirm(reason)
+            setReason("")
+            onClose()
+        }
+    }
+
+    return (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="bg-white rounded-2xl w-full max-w-sm mx-4 p-6 shadow-xl animate-in zoom-in-95 duration-200">
+                <h3 className="text-lg font-bold text-gray-900 mb-2">Reject Verification</h3>
+                <p className="text-sm text-gray-500 mb-4">Please provide a reason for rejecting this pharmacy.</p>
+
+                <textarea
+                    className="w-full text-sm p-3 bg-white border border-gray-200 rounded-xl focus:border-red-200 focus:ring-2 focus:ring-red-50 outline-none transition-all min-h-[100px] text-gray-700 placeholder:text-gray-400 mb-4"
+                    placeholder="Reason for rejection..."
+                    value={reason}
+                    onChange={(e) => setReason(e.target.value)}
+                    autoFocus
+                />
+
+                <div className="flex justify-end gap-2">
+                    <button
+                        onClick={onClose}
+                        className="px-4 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-xl transition-colors"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={handleSubmit}
+                        disabled={!reason.trim()}
+                        className="px-6 py-2 text-sm font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        Confirm Reject
                     </button>
                 </div>
             </div>
@@ -263,6 +316,7 @@ export function VerifyPharmaciesContent() {
     const [pharmacies, setPharmacies] = React.useState<Pharmacy[]>([])
     const [loading, setLoading] = React.useState(true)
     const [viewingDocument, setViewingDocument] = React.useState<Document | null>(null)
+    const [rejectId, setRejectId] = React.useState<string | null>(null)
 
     React.useEffect(() => {
         const fetchPending = async () => {
@@ -313,18 +367,23 @@ export function VerifyPharmaciesContent() {
         }
     }
 
-    const handleReject = async (id: string) => {
-        const reason = window.prompt("Enter rejection reason:")
-        if (reason === null) return // Canceled
+    const initReject = (id: string) => {
+        setRejectId(id)
+    }
+
+    const handleConfirmReject = async (reason: string) => {
+        if (!rejectId) return
 
         try {
-            const res = await rejectPharmacy(id, reason || "Documents invalid or incomplete")
+            const res = await rejectPharmacy(rejectId, reason)
             if (res.status) {
-                setPharmacies((prev) => prev.filter((p) => p.id !== id))
+                setPharmacies((prev) => prev.filter((p) => p.id !== rejectId))
                 setSelectedPharmacy(null)
             }
         } catch (error) {
             console.error("Failed to reject pharmacy:", error)
+        } finally {
+            setRejectId(null)
         }
     }
 
@@ -407,13 +466,19 @@ export function VerifyPharmaciesContent() {
                 isOpen={!!selectedPharmacy}
                 onClose={() => setSelectedPharmacy(null)}
                 onApprove={handleApprove}
-                onReject={handleReject}
+                onReject={initReject}
                 onViewDocument={(doc) => setViewingDocument(doc)}
             />
 
             <DocumentViewerModal
                 document={viewingDocument}
                 onClose={() => setViewingDocument(null)}
+            />
+
+            <RejectionModal
+                isOpen={!!rejectId}
+                onClose={() => setRejectId(null)}
+                onConfirm={handleConfirmReject}
             />
         </div>
     )
