@@ -6,6 +6,12 @@ export const metadata: Metadata = {
     description: "Find pharmacies on the interactive map.",
 }
 
+import { Suspense } from "react"
+
 export default function MapPage() {
-    return <MapPageContainer />
+    return (
+        <Suspense fallback={<div className="h-screen w-screen flex items-center justify-center bg-gray-50">Loading Map...</div>}>
+            <MapPageContainer />
+        </Suspense>
+    )
 }
