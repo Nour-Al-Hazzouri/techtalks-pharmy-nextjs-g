@@ -95,3 +95,59 @@ export async function deleteMedicine(id: number): Promise<ApiResponse<any>> {
         method: 'DELETE'
     });
 }
+
+// --- Admin Dashboard ---
+
+export interface AdminPharmacy {
+    id: number;
+    name: string;
+    address: string;
+    phone: string;
+    license_number: string;
+    verification_status: 'incomplete' | 'pending' | 'verified' | 'rejected';
+    created_at: string;
+    updated_at: string;
+}
+
+/**
+ * Get pharmacies for admin (with optional status filter)
+ */
+export async function getAdminPharmacies(status?: string): Promise<ApiResponse<PaginatedResponse<AdminPharmacy>>> {
+    const query = status ? `?status=${status}` : '';
+    return apiFetch<ApiResponse<PaginatedResponse<AdminPharmacy>>>(`/admin/pharmacies${query}`);
+}
+
+/**
+ * Get admin dashboard stats by aggregating multiple endpoints
+ */
+export async function getAdminDashboardStats(): Promise<{
+    pendingVerifications: number;
+    verifiedPharmacies: number;
+    rejected: number;
+    totalMedicines: number;
+}> {
+    const [pharmaciesRes, medicinesRes] = await Promise.all([
+        apiFetch<ApiResponse<PaginatedResponse<AdminPharmacy>>>('/admin/pharmacies'),
+        apiFetch<ApiResponse<PaginatedResponse<Medicine>>>('/admin/medicines?page=1')
+    ]);
+
+    const pharmacies = pharmaciesRes.data?.data || [];
+    const pending = pharmacies.filter(p => p.verification_status === 'pending').length;
+    const verified = pharmacies.filter(p => p.verification_status === 'verified').length;
+    const rejected = pharmacies.filter(p => p.verification_status === 'rejected').length;
+
+    return {
+        pendingVerifications: pending,
+        verifiedPharmacies: verified,
+        rejected: rejected,
+        totalMedicines: medicinesRes.data?.meta?.total || 0
+    };
+}
+
+/**
+ * Get pending pharmacies for verification list
+ */
+export async function getPendingPharmacies(): Promise<AdminPharmacy[]> {
+    const res = await apiFetch<ApiResponse<PaginatedResponse<AdminPharmacy>>>('/admin/pharmacies?status=pending');
+    return res.data?.data || [];
+}

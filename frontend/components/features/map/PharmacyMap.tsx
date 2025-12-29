@@ -14,7 +14,7 @@ const createPharmacyIcon = (isCheapest?: boolean) => {
 
     // Render the Lucide icon to a string
     const iconHtml = renderToString(
-        <div className="relative flex flex-col items-center justify-center translate-y-[-50%]">
+        <div className="relative flex flex-col items-center justify-center">
             <div className={`w-8 h-8 rounded-full bg-white shadow-md flex items-center justify-center border-2`} style={{ borderColor: color }}>
                 <Pill className={`w-4 h-4`} style={{ color: color }} />
             </div>
