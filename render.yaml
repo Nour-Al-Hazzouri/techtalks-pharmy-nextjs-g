@@ -1,0 +1,45 @@
+services:
+  - type: web
+    name: techtalks-pharmy-backend
+    runtime: docker
+    repo: https://github.com/Nour-Al-Hazzouri/techtalks-pharmy-nextjs-g
+    region: oregon
+    plan: free
+    branch: main-laravel
+    rootDir: backend
+    envVars:
+      - key: APP_KEY
+        generateValue: true
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        fromDatabase:
+          name: pharmy-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: pharmy-db
+          property: port
+      - key: DB_DATABASE
+        fromDatabase:
+          name: pharmy-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: pharmy-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: pharmy-db
+          property: password
+
+databases:
+  - name: pharmy-db
+    plan: free
+    region: oregon
