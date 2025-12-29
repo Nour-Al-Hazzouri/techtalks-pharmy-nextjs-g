@@ -1,12 +1,12 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { MapContainer, TileLayer, Marker, Popup, ZoomControl, useMap } from "react-leaflet"
+import { MapContainer, TileLayer, Marker, Popup, ZoomControl, useMap, useMapEvents } from "react-leaflet"
 import "leaflet/dist/leaflet.css"
 import L from "leaflet"
 import { Pharmacy } from "@/lib/mock-data"
 import { renderToString } from 'react-dom/server'
-import { Pill } from "lucide-react"
+import { Pill, Navigation } from "lucide-react"
 
 // Create custom icons using DivIcon and SVG
 const createPharmacyIcon = (isCheapest?: boolean) => {
@@ -32,10 +32,33 @@ const createPharmacyIcon = (isCheapest?: boolean) => {
     })
 }
 
+const createUserIcon = () => {
+    const color = "#3B82F6" // Blue
+
+    const iconHtml = renderToString(
+        <div className="relative flex flex-col items-center justify-center">
+            <div className="w-8 h-8 rounded-full bg-blue-500 shadow-md flex items-center justify-center border-2 border-white">
+                <Navigation className="w-4 h-4 text-white fill-white" />
+            </div>
+            <div className="w-2 h-2 rotate-45 transform -mt-1 bg-blue-500 border-r border-b border-white"></div>
+        </div>
+    )
+
+    return new L.DivIcon({
+        className: 'user-location-icon',
+        html: iconHtml,
+        iconSize: [32, 40],
+        iconAnchor: [16, 40],
+        popupAnchor: [0, -40]
+    })
+}
+
 interface PharmacyMapProps {
     pharmacies: Pharmacy[]
     onSelect: (pharmacy: Pharmacy) => void
     center?: [number, number]
+    userLocation?: [number, number] | null
+    onMapClick?: (coords: [number, number]) => void
 }
 
 function RecenterMap({ center }: { center?: [number, number] }) {
@@ -50,7 +73,16 @@ function RecenterMap({ center }: { center?: [number, number] }) {
     return null
 }
 
-export default function PharmacyMap({ pharmacies, onSelect, center }: PharmacyMapProps) {
+function MapEvents({ onClick }: { onClick?: (coords: [number, number]) => void }) {
+    useMapEvents({
+        click(e) {
+            if (onClick) onClick([e.latlng.lat, e.latlng.lng])
+        },
+    })
+    return null
+}
+
+export default function PharmacyMap({ pharmacies, onSelect, center, userLocation, onMapClick }: PharmacyMapProps) {
     // Ensure map only renders on client
     const [isMounted, setIsMounted] = useState(false)
 
@@ -68,11 +100,21 @@ export default function PharmacyMap({ pharmacies, onSelect, center }: PharmacyMa
             zoomControl={false}
         >
             <RecenterMap center={center} />
+            <MapEvents onClick={onMapClick} />
             <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
             <ZoomControl position="bottomright" />
+
+            {userLocation && (
+                <Marker
+                    position={userLocation}
+                    icon={createUserIcon()}
+                >
+                    <Popup>Your Location</Popup>
+                </Marker>
+            )}
 
             {pharmacies.map((pharmacy) => (
                 <Marker

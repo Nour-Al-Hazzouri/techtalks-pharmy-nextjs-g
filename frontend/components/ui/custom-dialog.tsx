@@ -5,14 +5,17 @@ import { X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 
-interface CustomDialogProps {
+export interface AlertConfig {
     isOpen: boolean
-    onClose: () => void
     title: string
     description?: string
     variant?: "default" | "destructive"
     confirmLabel?: string
     onConfirm?: () => void
+}
+
+export interface CustomDialogProps extends AlertConfig {
+    onClose: () => void
 }
 
 export function CustomDialog({

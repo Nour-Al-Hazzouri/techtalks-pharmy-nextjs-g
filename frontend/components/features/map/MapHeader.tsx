@@ -1,6 +1,6 @@
 "use client"
 
-import { MapPin, X, LogOut, Menu, User as UserIcon, KeyRound, Settings } from "lucide-react"
+import { MapPin, X, LogOut, Menu, User as UserIcon, KeyRound, Settings, Navigation } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { logout } from "@/lib/api/auth"
 import { LocationSearchBar, SelectedLocation } from "./LocationSearchBar"
@@ -11,12 +11,13 @@ export type DashboardView = "map" | "settings" | "profile" | "password"
 
 interface MapHeaderProps {
     searchQuery: string
-    onClear: () => void
+    onClear?: () => void
     location: SelectedLocation | null
     onLocationSelect: (location: SelectedLocation) => void
     onLocationClear: () => void
     activeView: DashboardView
     onViewChange: (view: DashboardView) => void
+    onLocate?: () => void
 }
 
 export function MapHeader({
@@ -27,6 +28,7 @@ export function MapHeader({
     onLocationClear,
     activeView,
     onViewChange,
+    onLocate
 }: MapHeaderProps) {
     const router = useRouter()
     const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false)
@@ -80,7 +82,18 @@ export function MapHeader({
 
             </div>
             <div className="flex items-center gap-2 shrink-0">
-                <LocationSearchBar value={location} onSelect={onLocationSelect} onClear={onLocationClear} />
+                <div className="flex items-center gap-1">
+                    <LocationSearchBar value={location} onSelect={onLocationSelect} onClear={onLocationClear} />
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9 text-blue-500 hover:text-blue-600 hover:bg-blue-50"
+                        onClick={onLocate}
+                        title="Locate Me"
+                    >
+                        <Navigation className="h-4 w-4" />
+                    </Button>
+                </div>
                 {/* Mobile Burger */}
                 <div className="relative md:hidden">
                     <Button
