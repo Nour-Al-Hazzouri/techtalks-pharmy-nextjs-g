@@ -21,7 +21,7 @@ return [
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
-        env('FRONTEND_URL', '*'), // Defaults to * for dev, but should be set in prod
+        env('FRONTEND_URL', 'https://techtalks-pharmy.netlify.app'), 
         'http://localhost:3000',
     ],
 
