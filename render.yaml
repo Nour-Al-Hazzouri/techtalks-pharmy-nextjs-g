@@ -10,6 +10,8 @@ services:
     envVars:
       - key: APP_KEY
         generateValue: true
+      - key: JWT_SECRET
+        generateValue: true
       - key: APP_ENV
         value: production
       - key: APP_DEBUG
