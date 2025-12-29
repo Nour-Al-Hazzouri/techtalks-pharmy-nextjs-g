@@ -121,8 +121,7 @@ export function MapPageContainer() {
 
     const handleLocateMe = () => {
         // User requested manual location only
-        // Center on Tripoli as a default starting point
-        setMapCenter([34.4367, 35.8497])
+        // Do not auto-center the map (let user choose freely)
         setAlertConfig({
             isOpen: true,
             title: "Set Your Location",

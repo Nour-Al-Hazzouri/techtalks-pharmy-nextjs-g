@@ -36,7 +36,7 @@ const createUserIcon = () => {
     const color = "#3B82F6" // Blue
 
     const iconHtml = renderToString(
-        <div className="relative flex flex-col items-center justify-center translate-y-[-50%]">
+        <div className="relative flex flex-col items-center justify-center">
             <div className="w-8 h-8 rounded-full bg-blue-500 shadow-md flex items-center justify-center border-2 border-white">
                 <Navigation className="w-4 h-4 text-white fill-white" />
             </div>
