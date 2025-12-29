@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const registerSchema = z.object({
-    name: z.string().min(2, { message: "Name must be at least 2 characters" }),
+    name: z.string().min(2, { message: "Name must be at least 2 characters" }).regex(/^[a-zA-Z\s-]+$/, { message: "Name cannot contain numbers or special characters" }),
     email: z.string().email({ message: "Invalid email address" }),
     phone: z.string().regex(/^\+961\d{8}$/, { message: "Invalid Lebanese phone number (+961XXXXXXXX)" }),
     role: z.enum(["patient", "pharmacy"], { message: "Please select a role" }),

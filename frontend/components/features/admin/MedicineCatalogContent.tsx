@@ -299,12 +299,12 @@ export function MedicineCatalogContent() {
                             <h3 className="text-sm font-semibold text-gray-900 mb-1 pr-10">
                                 {medicine.name}
                             </h3>
-                            <p className="text-xs text-gray-500 mb-3">{medicine.generic_name || "N/A"}</p>
+                            <p className="text-xs text-gray-500 mb-3">{medicine.generic_name || ""}</p>
                             <span className="inline-block px-3 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded-full mb-3 md:mb-4">
                                 {medicine.category || "General"}
                             </span>
                             <p className="text-xs text-gray-400">
-                                Added on {medicine.created_at ? new Date(medicine.created_at).toLocaleDateString() : "N/A"}
+                                {medicine.created_at ? `Added on ${new Date(medicine.created_at).toLocaleDateString()}` : ""}
                             </p>
                         </div>
                     ))}

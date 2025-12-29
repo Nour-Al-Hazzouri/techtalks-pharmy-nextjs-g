@@ -65,7 +65,7 @@ export default function PharmacyLayout({
                 pharmacyName={pharmacy?.name ?? "Loading..."}
                 pharmacyLocation={pharmacy?.address ?? ""}
             />
-            <main className="flex-1 overflow-hidden flex flex-col min-w-0 min-h-0">
+            <main className="flex-1 overflow-hidden flex flex-col min-w-0 min-h-0 pt-[57px] md:pt-0">
                 {children}
             </main>
         </div>

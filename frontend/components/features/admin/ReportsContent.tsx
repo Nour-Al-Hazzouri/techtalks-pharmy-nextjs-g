@@ -25,6 +25,7 @@ import { cn } from "@/lib/utils"
 import { getAdminReports, updateReportStatus, approvePharmacy, rejectPharmacy, AdminReport } from "@/lib/api/admin"
 import { format } from "date-fns"
 import { Button } from "@/components/ui/button"
+import { Textarea } from "@/components/ui/textarea"
 
 interface ReportActionModalProps {
     report: AdminReport | null
@@ -195,9 +196,9 @@ function ReportActionModal({ report, isOpen, onClose, onStatusUpdate, onVerifica
                                                 </Button>
                                             ) : (
                                                 <div className="space-y-2 animate-in slide-in-from-top-2 duration-200">
-                                                    <textarea
+                                                    <Textarea
                                                         placeholder="Reason for revocation..."
-                                                        className="w-full text-xs p-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:border-red-200 focus:bg-white outline-none transition-all min-h-[80px]"
+                                                        className="w-full text-sm p-3 bg-white border border-gray-200 rounded-xl focus:border-red-200 focus:ring-2 focus:ring-red-50 outline-none transition-all min-h-[80px] text-gray-700 placeholder:text-gray-400"
                                                         value={rejectReason}
                                                         onChange={(e) => setRejectReason(e.target.value)}
                                                     />
@@ -244,27 +245,27 @@ function ReportActionModal({ report, isOpen, onClose, onStatusUpdate, onVerifica
                 </div>
 
                 {/* Footer Actions */}
-                <div className="p-6 bg-gray-50 border-t border-gray-100 flex items-center gap-3">
+                <div className="p-6 bg-gray-50 border-t border-gray-100 flex flex-col-reverse md:flex-row md:items-center gap-3">
                     <Button
                         variant="ghost"
                         onClick={onClose}
-                        className="text-gray-500 font-bold hover:bg-gray-100 h-12 px-6 rounded-2xl"
+                        className="w-full md:w-auto text-gray-500 font-bold hover:bg-gray-100 h-12 px-6 rounded-2xl"
                     >
                         Back
                     </Button>
-                    <div className="flex-1" />
+                    <div className="hidden md:block flex-1" />
                     <Button
                         variant="outline"
                         onClick={() => handleStatusUpdate('dismissed')}
                         disabled={!!actionLoading}
-                        className="border-gray-200 text-gray-600 hover:bg-white hover:border-gray-300 font-bold h-12 px-6 rounded-2xl"
+                        className="w-full md:w-auto border-gray-200 text-gray-600 hover:bg-white hover:border-gray-300 font-bold h-12 px-6 rounded-2xl"
                     >
                         {actionLoading === 'dismissed' ? <Loader2 className="h-4 w-4 animate-spin" /> : "Dismiss Report"}
                     </Button>
                     <Button
                         onClick={() => handleStatusUpdate('resolved')}
                         disabled={!!actionLoading}
-                        className="bg-[#E91E63] hover:bg-[#D81B60] text-white font-bold h-12 px-8 rounded-2xl shadow-lg shadow-pink-100"
+                        className="w-full md:w-auto bg-[#E91E63] hover:bg-[#D81B60] text-white font-bold h-12 px-8 rounded-2xl shadow-lg shadow-pink-100"
                     >
                         {actionLoading === 'resolved' ? <Loader2 className="h-4 w-4 animate-spin" /> : "Resolve & Close"}
                     </Button>

@@ -257,12 +257,66 @@ function VerificationModal({ pharmacy, isOpen, onClose, onApprove, onReject, onV
     )
 }
 
+interface RejectionModalProps {
+    isOpen: boolean
+    onClose: () => void
+    onConfirm: (reason: string) => void
+}
+
+function RejectionModal({ isOpen, onClose, onConfirm }: RejectionModalProps) {
+    const [reason, setReason] = React.useState("")
+
+    if (!isOpen) return null
+
+    const handleSubmit = () => {
+        if (reason.trim()) {
+            onConfirm(reason)
+            setReason("")
+            onClose()
+        }
+    }
+
+    return (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="bg-white rounded-2xl w-full max-w-sm mx-4 p-6 shadow-xl animate-in zoom-in-95 duration-200">
+                <h3 className="text-lg font-bold text-gray-900 mb-2">Reject Verification</h3>
+                <p className="text-sm text-gray-500 mb-4">Please provide a reason for rejecting this pharmacy.</p>
+
+                <textarea
+                    className="w-full text-sm p-3 bg-white border border-gray-200 rounded-xl focus:border-red-200 focus:ring-2 focus:ring-red-50 outline-none transition-all min-h-[100px] text-gray-700 placeholder:text-gray-400 mb-4"
+                    placeholder="Reason for rejection..."
+                    value={reason}
+                    onChange={(e) => setReason(e.target.value)}
+                    autoFocus
+                />
+
+                <div className="flex justify-end gap-2">
+                    <button
+                        onClick={onClose}
+                        className="px-4 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-xl transition-colors"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={handleSubmit}
+                        disabled={!reason.trim()}
+                        className="px-6 py-2 text-sm font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        Confirm Reject
+                    </button>
+                </div>
+            </div>
+        </div>
+    )
+}
+
 export function VerifyPharmaciesContent() {
     const [searchQuery, setSearchQuery] = React.useState("")
     const [selectedPharmacy, setSelectedPharmacy] = React.useState<Pharmacy | null>(null)
     const [pharmacies, setPharmacies] = React.useState<Pharmacy[]>([])
     const [loading, setLoading] = React.useState(true)
     const [viewingDocument, setViewingDocument] = React.useState<Document | null>(null)
+    const [rejectId, setRejectId] = React.useState<string | null>(null)
 
     React.useEffect(() => {
         const fetchPending = async () => {
@@ -313,18 +367,23 @@ export function VerifyPharmaciesContent() {
         }
     }
 
-    const handleReject = async (id: string) => {
-        const reason = window.prompt("Enter rejection reason:")
-        if (reason === null) return // Canceled
+    const initReject = (id: string) => {
+        setRejectId(id)
+    }
+
+    const handleConfirmReject = async (reason: string) => {
+        if (!rejectId) return
 
         try {
-            const res = await rejectPharmacy(id, reason || "Documents invalid or incomplete")
+            const res = await rejectPharmacy(rejectId, reason)
             if (res.status) {
-                setPharmacies((prev) => prev.filter((p) => p.id !== id))
+                setPharmacies((prev) => prev.filter((p) => p.id !== rejectId))
                 setSelectedPharmacy(null)
             }
         } catch (error) {
             console.error("Failed to reject pharmacy:", error)
+        } finally {
+            setRejectId(null)
         }
     }
 
@@ -407,13 +466,19 @@ export function VerifyPharmaciesContent() {
                 isOpen={!!selectedPharmacy}
                 onClose={() => setSelectedPharmacy(null)}
                 onApprove={handleApprove}
-                onReject={handleReject}
+                onReject={initReject}
                 onViewDocument={(doc) => setViewingDocument(doc)}
             />
 
             <DocumentViewerModal
                 document={viewingDocument}
                 onClose={() => setViewingDocument(null)}
+            />
+
+            <RejectionModal
+                isOpen={!!rejectId}
+                onClose={() => setRejectId(null)}
+                onConfirm={handleConfirmReject}
             />
         </div>
     )
