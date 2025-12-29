@@ -14,46 +14,6 @@ Route::prefix('v1')->group(function () {
     Route::post('auth/register', [AuthController::class, 'register']);
     Route::post('auth/login', [AuthController::class, 'login']);
 
-    // Debug Route (Temporary)
-    Route::get('debug-status', function() {
-        try {
-            \Illuminate\Support\Facades\DB::connection()->getPdo();
-            $userCount = \App\Models\User::count();
-            return response()->json([
-                'status' => 'ok',
-                'database' => 'connected',
-                'user_count' => $userCount,
-                'app_key' => config('app.key') ? 'set' : 'missing',
-                'jwt_secret' => env('JWT_SECRET') ? 'set' : 'missing',
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ], 500);
-        }
-    });
-
-    // Create or Reset Admin (DELETE AFTER USE)
-    Route::get('setup-admin', function() {
-        $admin = \App\Models\User::where('email', 'admin@pharmy.com')->first();
-        if ($admin) {
-            // Reset password for existing admin
-            $admin->password = \Illuminate\Support\Facades\Hash::make('admin123');
-            $admin->save();
-            return response()->json(['message' => 'Admin password reset', 'email' => 'admin@pharmy.com']);
-        }
-        // Create new admin
-        $admin = \App\Models\User::create([
-            'name' => 'Admin',
-            'email' => 'admin@pharmy.com',
-            'password' => \Illuminate\Support\Facades\Hash::make('admin123'),
-            'role' => 'admin',
-            'phone' => null,
-        ]);
-        return response()->json(['message' => 'Admin created', 'email' => 'admin@pharmy.com']);
-    });
 
     // Public Pharmacy Routes
     Route::get('pharmacies', [PharmacyController::class, 'index']);
