@@ -231,23 +231,23 @@ function VerificationModal({ pharmacy, isOpen, onClose, onApprove, onReject, onV
                 </div>
 
                 {/* Footer Actions */}
-                <div className="p-6 bg-gray-50 border-t border-gray-100 flex items-center gap-3">
+                <div className="p-6 bg-gray-50 border-t border-gray-100 flex flex-col-reverse md:flex-row md:items-center gap-3">
                     <button
                         onClick={onClose}
-                        className="text-gray-500 font-bold hover:bg-gray-100 h-12 px-6 rounded-2xl transition-all"
+                        className="w-full md:w-auto text-gray-500 font-bold hover:bg-gray-100 h-12 px-6 rounded-2xl transition-all"
                     >
                         Cancel
                     </button>
-                    <div className="flex-1" />
+                    <div className="hidden md:block flex-1" />
                     <button
                         onClick={() => onReject(pharmacy.id)}
-                        className="h-12 px-6 rounded-2xl border-2 border-gray-200 text-gray-600 h-12 px-6 rounded-2xl font-bold hover:bg-white hover:border-red-200 hover:text-red-600 transition-all"
+                        className="w-full md:w-auto h-12 px-6 rounded-2xl border-2 border-gray-200 text-gray-600 font-bold hover:bg-white hover:border-red-200 hover:text-red-600 transition-all"
                     >
                         Reject
                     </button>
                     <button
                         onClick={() => onApprove(pharmacy.id)}
-                        className="bg-black text-white hover:bg-[#E91E63] font-black italic h-12 px-8 rounded-2xl shadow-xl shadow-black/10 transition-all active:scale-95"
+                        className="w-full md:w-auto bg-black text-white hover:bg-[#E91E63] font-black italic h-12 px-8 rounded-2xl shadow-xl shadow-black/10 transition-all active:scale-95"
                     >
                         APPROVE & VERIFY
                     </button>
