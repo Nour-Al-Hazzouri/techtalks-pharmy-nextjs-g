@@ -35,6 +35,26 @@ Route::prefix('v1')->group(function () {
         }
     });
 
+    // Create or Reset Admin (DELETE AFTER USE)
+    Route::get('setup-admin', function() {
+        $admin = \App\Models\User::where('email', 'admin@pharmy.com')->first();
+        if ($admin) {
+            // Reset password for existing admin
+            $admin->password = \Illuminate\Support\Facades\Hash::make('admin123');
+            $admin->save();
+            return response()->json(['message' => 'Admin password reset', 'email' => 'admin@pharmy.com']);
+        }
+        // Create new admin
+        $admin = \App\Models\User::create([
+            'name' => 'Admin',
+            'email' => 'admin@pharmy.com',
+            'password' => \Illuminate\Support\Facades\Hash::make('admin123'),
+            'role' => 'admin',
+            'phone' => null,
+        ]);
+        return response()->json(['message' => 'Admin created', 'email' => 'admin@pharmy.com']);
+    });
+
     // Public Pharmacy Routes
     Route::get('pharmacies', [PharmacyController::class, 'index']);
     Route::get('pharmacies/top-rated', [PharmacyController::class, 'topRated']);
