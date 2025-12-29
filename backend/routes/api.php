@@ -35,22 +35,6 @@ Route::prefix('v1')->group(function () {
         }
     });
 
-    // Temp Admin Creation Route (DELETE AFTER USE)
-    Route::get('create-admin', function() {
-        $existing = \App\Models\User::where('email', 'admin@pharmy.com')->first();
-        if ($existing) {
-            return response()->json(['message' => 'Admin already exists', 'id' => $existing->id]);
-        }
-        $admin = \App\Models\User::create([
-            'name' => 'Admin',
-            'email' => 'admin@pharmy.com',
-            'password' => 'admin123',
-            'role' => 'admin',
-            'phone' => null,
-        ]);
-        return response()->json(['message' => 'Admin created', 'id' => $admin->id, 'email' => $admin->email]);
-    });
-
     // Public Pharmacy Routes
     Route::get('pharmacies', [PharmacyController::class, 'index']);
     Route::get('pharmacies/top-rated', [PharmacyController::class, 'topRated']);
