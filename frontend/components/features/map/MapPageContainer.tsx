@@ -233,8 +233,12 @@ export function MapPageContainer() {
 
     const handleClearSearch = () => {
         setSearchQuery("")
+        setSelectedPharmacy(null)
         fetchAllPharmacies()
-        if (!isDesktop) setIsPanelOpen(false)
+        if (!isDesktop) {
+            setIsPanelOpen(true)
+            setSnap(0.5)
+        }
     }
 
     const handleViewChange = (view: DashboardView) => {

@@ -84,7 +84,7 @@ export async function geocodeSearch(query: string): Promise<ApiResponse<GeocodeR
 /**
  * Submit report for a pharmacy
  */
-export async function submitReport(data: { pharmacy_id: number | string, report_type: string, reason?: string }): Promise<ApiResponse<any>> {
+export async function submitReport(data: { pharmacy_id: number | string, report_type: string, reason: string }): Promise<ApiResponse<any>> {
     return apiFetch<ApiResponse<any>>('/reports', {
         method: 'POST',
         body: JSON.stringify(data)

@@ -106,10 +106,11 @@ class AuthController extends Controller
          };
 
          $validated = $request->validate([
-             'name' => ['sometimes', 'string', 'max:255', 'regex:/^([^0-9]*)$/'],
+             'name' => ['sometimes', 'string', 'max:255', 'regex:/^\p{L}[\p{L}\p{M}]*(?:[ \-\'\x{2019}]\p{L}[\p{L}\p{M}]*)*$/u'],
              'email' => [
                  'sometimes',
                  'email',
+                 'regex:/^[^\s@]+@[^\s@]+\.[^\s@]{1,}$/',
                  'max:255',
                  Rule::unique('users', 'email')->ignore($user->id),
              ],
@@ -118,28 +119,7 @@ class AuthController extends Controller
                  'nullable',
                  'string',
                  'max:50',
-                 function ($attribute, $value, $fail) use ($normalizeLebanonPhone) {
-                     $national = $normalizeLebanonPhone($value);
-                     if ($national === null) {
-                         return;
-                     }
-
-                     if (strlen($national) === 7) {
-                         if (!preg_match('/^[13456789]\d{6}$/', $national)) {
-                             $fail('Phone number must be a valid Lebanese phone number.');
-                         }
-                         return;
-                     }
-
-                     if (strlen($national) === 8) {
-                         if (!preg_match('/^(70|71|76|78|79|80|81)\d{6}$/', $national)) {
-                             $fail('Phone number must be a valid Lebanese phone number.');
-                         }
-                         return;
-                     }
-
-                     $fail('Phone number must be a valid Lebanese phone number.');
-                 },
+                 'regex:/^(?:\+961 ?\d{2} ?\d{3} ?\d{3}|\+961\d{8}|00961 ?\d{2} ?\d{3} ?\d{3}|00961\d{8}|\d{2} ?\d{3} ?\d{3}|\d{8})$/',
              ],
          ]);
 

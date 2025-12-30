@@ -54,30 +54,24 @@ export function UserProfilePanel({ onBackToMap }: UserProfilePanelProps) {
         }
     }, [])
 
+    const isValidEmail = (value: string) => {
+        const raw = value.trim()
+        if (!raw) return false
+        return /^[^\s@]+@[^\s@]+\.[^\s@]{1,}$/.test(raw)
+    }
+
+    const isValidName = (value: string) => {
+        const raw = value.trim()
+        if (!raw) return false
+        return /^[\p{L}\p{M}]+(?:[ \-'\u2019][\p{L}\p{M}]+)*$/u.test(raw)
+    }
+
     const isValidLebanonPhone = (value: string) => {
         const raw = value.trim()
         if (!raw) return true
 
-        const digits = raw.replace(/\D/g, "")
-        if (!digits) return false
-
-        let national = digits
-        if (national.startsWith("961")) {
-            national = national.slice(3)
-        }
-        if (national.startsWith("0")) {
-            national = national.slice(1)
-        }
-
-        if (national.length === 7) {
-            return /^[13456789]\d{6}$/.test(national)
-        }
-
-        if (national.length === 8) {
-            return /^(70|71|76|78|79|80|81)\d{6}$/.test(national)
-        }
-
-        return false
+        const PHONE_FORMAT_REGEX = /^(?:\+961 ?\d{2} ?\d{3} ?\d{3}|\+961\d{8}|00961 ?\d{2} ?\d{3} ?\d{3}|00961\d{8}|\d{2} ?\d{3} ?\d{3}|\d{8})$/
+        return PHONE_FORMAT_REGEX.test(raw)
     }
 
     const onSubmit = async (e: React.FormEvent) => {
@@ -89,13 +83,18 @@ export function UserProfilePanel({ onBackToMap }: UserProfilePanelProps) {
             return
         }
 
-        if (/\d/.test(name)) {
-            setError("Name must not contain numbers")
+        if (!isValidName(name)) {
+            setError("Name can only contain letters, spaces, hyphens, and apostrophes")
             return
         }
 
         if (!email.trim()) {
             setError("Email is required")
+            return
+        }
+
+        if (!isValidEmail(email)) {
+            setError("Email must be a valid email address")
             return
         }
 
@@ -170,7 +169,7 @@ export function UserProfilePanel({ onBackToMap }: UserProfilePanelProps) {
             <form onSubmit={onSubmit} className="flex flex-col gap-3">
                 <div className="flex flex-col gap-1">
                     <label className="text-sm font-medium text-gray-700">Email</label>
-                    <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
+                    <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
                 </div>
 
                 <div className="flex flex-col gap-1">
