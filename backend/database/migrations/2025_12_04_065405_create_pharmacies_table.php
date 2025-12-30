@@ -23,7 +23,7 @@ return new class extends Migration
             $table->string('license_number')->nullable();
             $table->decimal('latitude', 10, 7)->nullable();
             $table->decimal('longitude', 10, 7)->nullable();
-            $table->enum('verification_status', ['pending','verified','rejected'])->default('pending');
+            $table->enum('verification_status', ['incomplete', 'pending', 'verified', 'rejected'])->default('incomplete');
             $table->text('rejection_reason')->nullable();
 
             $table->decimal('rating', 3, 2)->nullable();

@@ -55,7 +55,8 @@ class PharmacyRepository
 
     public function getAdminList(array $filters = []): LengthAwarePaginator
     {
-        $query = Pharmacy::with(['pharmacist', 'documents']);
+        $query = Pharmacy::with(['pharmacist', 'documents'])
+            ->orderByDesc('updated_at');
 
         if (isset($filters['status'])) {
             $query->where('verification_status', $filters['status']);

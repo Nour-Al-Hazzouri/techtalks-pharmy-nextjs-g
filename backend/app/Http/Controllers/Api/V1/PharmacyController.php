@@ -110,7 +110,10 @@ class PharmacyController extends Controller
         }
 
         $pharmacies = $this->pharmacyService->getAllPharmaciesAdmin($filters);
-        return $this->successResponse('Admin Pharmacies list', PharmacyResource::collection($pharmacies)->response()->getData(true));
+        return $this->successResponse('Admin Pharmacies list', PharmacyResource::collection($pharmacies)->response()->getData(true))
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
     }
 
     public function approve($id)
