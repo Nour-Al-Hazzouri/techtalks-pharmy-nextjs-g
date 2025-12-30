@@ -45,16 +45,29 @@ export async function apiFetch<T>(
         ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
     };
 
-    const response = await fetch(url, {
-        ...options,
-        cache: options.cache ?? 'no-store',
-        headers: {
-            ...defaultHeaders,
-            ...options.headers,
-        },
-    });
+    let response: Response;
+    try {
+        response = await fetch(url, {
+            ...options,
+            cache: options.cache ?? 'no-store',
+            headers: {
+                ...defaultHeaders,
+                ...options.headers,
+            },
+        });
+    } catch (err) {
+        const message = err instanceof Error ? err.message : 'Network request failed';
+        throw new ApiError(`Network error: ${message}`, 0, null);
+    }
 
-    const data = await response.json();
+    const rawText = await response.text();
+    const data = rawText ? (() => {
+        try {
+            return JSON.parse(rawText);
+        } catch {
+            return null;
+        }
+    })() : null;
 
     if (response.status === 401) {
         // Token expired or invalid
@@ -66,11 +79,21 @@ export async function apiFetch<T>(
     }
 
     if (!response.ok) {
-        throw new ApiError(
-            data.message || 'An error occurred',
-            response.status,
-            data.errors || null
-        );
+        const message =
+            (data && typeof data === 'object' && 'message' in data && typeof (data as any).message === 'string'
+                ? (data as any).message
+                : response.statusText || 'Request failed');
+
+        const errors =
+            (data && typeof data === 'object' && 'errors' in data
+                ? ((data as any).errors ?? null)
+                : null);
+
+        throw new ApiError(message || 'An error occurred', response.status, errors);
+    }
+
+    if (response.status !== 204 && data === null) {
+        throw new ApiError('Invalid server response. Please try again.', response.status, null);
     }
 
     return data;
