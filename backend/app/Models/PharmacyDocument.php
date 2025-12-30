@@ -19,7 +19,16 @@ class PharmacyDocument extends Model
 
     public function getFileUrlAttribute()
     {
-        return $this->file_path ? asset('storage/' . $this->file_path) : null;
+        if (!$this->file_path) {
+            return null;
+        }
+
+        $baseUrl = rtrim(config('app.url') ?: request()->getSchemeAndHttpHost(), '/');
+        if (str_starts_with($baseUrl, 'http://')) {
+            $baseUrl = 'https://' . substr($baseUrl, 7);
+        }
+
+        return $baseUrl . '/storage/' . ltrim($this->file_path, '/');
     }
 
     public function pharmacy()
