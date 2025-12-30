@@ -15,7 +15,7 @@ class ReportRequest extends FormRequest
     {
         return [
             'pharmacy_id' => 'required|exists:pharmacies,id',
-            'reason' => 'nullable|string',
+            'reason' => ['required', 'string', 'min:10', 'regex:/\\S/'],
             'report_type' => 'required|in:wrong_availability,wrong_location,wrong_contact,other',
         ];
     }

@@ -281,6 +281,7 @@ export function ReportsContent() {
     const [refreshing, setRefreshing] = React.useState(false)
     const [error, setError] = React.useState<string | null>(null)
     const [selectedReport, setSelectedReport] = React.useState<AdminReport | null>(null)
+    const [view, setView] = React.useState<"active" | "history">("active")
 
     const fetchReports = async (showRefresh = false) => {
         if (showRefresh) setRefreshing(true)
@@ -336,6 +337,10 @@ export function ReportsContent() {
         return type.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
     }
 
+    const activeReports = React.useMemo(() => reports.filter(r => r.status === "pending"), [reports])
+    const historyReports = React.useMemo(() => reports.filter(r => r.status !== "pending"), [reports])
+    const shownReports = view === "active" ? activeReports : historyReports
+
     if (loading) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
@@ -348,18 +353,42 @@ export function ReportsContent() {
     return (
         <div className="flex-1 overflow-y-auto">
             <div className="w-full max-w-screen-2xl mx-auto space-y-8 px-4 py-4 pt-20 pb-24 md:px-6 md:py-6 md:pt-6 md:pb-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900 leading-none">User Reports</h1>
                     <p className="text-sm text-gray-500 mt-2">Manage and resolve issues reported by users regarding pharmacies.</p>
                 </div>
-                <button
-                    onClick={() => fetchReports(true)}
-                    disabled={refreshing}
-                    className="p-2.5 rounded-xl border border-gray-200 bg-white hover:shadow-md transition-all active:scale-95 disabled:opacity-50 shadow-sm"
-                >
-                    <RefreshCcw className={cn("h-5 w-5 text-gray-600", refreshing && "animate-spin")} />
-                </button>
+                <div className="flex w-full sm:w-auto items-center justify-between sm:justify-end gap-3">
+                    <div className="flex items-center gap-2 p-1 bg-white border border-gray-200 rounded-xl shadow-sm">
+                        <button
+                            type="button"
+                            onClick={() => setView("active")}
+                            className={cn(
+                                "px-3 py-2 rounded-lg text-sm font-bold transition-colors",
+                                view === "active" ? "bg-[#E91E63] text-white" : "text-gray-600 hover:bg-gray-50"
+                            )}
+                        >
+                            Reports ({activeReports.length})
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setView("history")}
+                            className={cn(
+                                "px-3 py-2 rounded-lg text-sm font-bold transition-colors",
+                                view === "history" ? "bg-[#E91E63] text-white" : "text-gray-600 hover:bg-gray-50"
+                            )}
+                        >
+                            History ({historyReports.length})
+                        </button>
+                    </div>
+                    <button
+                        onClick={() => fetchReports(true)}
+                        disabled={refreshing}
+                        className="p-2.5 rounded-xl border border-gray-200 bg-white hover:shadow-md transition-all active:scale-95 disabled:opacity-50 shadow-sm"
+                    >
+                        <RefreshCcw className={cn("h-5 w-5 text-gray-600", refreshing && "animate-spin")} />
+                    </button>
+                </div>
             </div>
 
             {error ? (
@@ -378,19 +407,25 @@ export function ReportsContent() {
                         Re-initialize Fetch
                     </button>
                 </div>
-            ) : reports.length === 0 ? (
+            ) : shownReports.length === 0 ? (
                 <div className="bg-white border-2 border-dashed border-gray-100 p-16 rounded-3xl flex flex-col items-center text-center space-y-4">
                     <div className="h-20 w-20 bg-gray-50 rounded-3xl flex items-center justify-center">
                         <MessageSquare className="h-10 w-10 text-gray-300" />
                     </div>
                     <div>
-                        <p className="text-gray-900 font-bold italic text-lg uppercase tracking-tight">System Status: Optimal</p>
-                        <p className="text-sm text-gray-400 mt-1 max-w-[240px]">There are currently no active reports requiring administrative attention.</p>
+                        <p className="text-gray-900 font-bold italic text-lg uppercase tracking-tight">
+                            {view === "active" ? "System Status: Optimal" : "History: Empty"}
+                        </p>
+                        <p className="text-sm text-gray-400 mt-1 max-w-[280px]">
+                            {view === "active"
+                                ? "There are currently no active reports requiring administrative attention."
+                                : "No resolved or dismissed reports yet."}
+                        </p>
                     </div>
                 </div>
             ) : (
                 <div className="grid gap-4">
-                    {reports.map((report) => (
+                    {shownReports.map((report) => (
                         <div
                             key={report.id}
                             className="bg-white rounded-3xl border border-gray-100 overflow-hidden hover:shadow-xl hover:border-pink-100/50 transition-all duration-300 group"
@@ -456,15 +491,15 @@ export function ReportsContent() {
                                         </Button>
                                         <Button
                                             onClick={() => handleUpdateStatus(report.id, 'resolved')}
-                                            disabled={report.status === 'resolved'}
+                                            disabled={report.status !== 'pending'}
                                             className={cn(
                                                 "flex-1 lg:w-40 h-14 font-black italic rounded-2xl shadow-xl transition-all active:scale-95",
-                                                report.status === 'resolved'
+                                                report.status !== 'pending'
                                                     ? "bg-gray-100 text-gray-400 shadow-none cursor-not-allowed"
                                                     : "bg-black text-white hover:bg-[#E91E63] shadow-black/10 hover:shadow-pink-200"
                                             )}
                                         >
-                                            {report.status === 'resolved' ? 'RESOLVED' : 'RESOLVE'}
+                                            {report.status === 'resolved' ? 'RESOLVED' : report.status === 'dismissed' ? 'DISMISSED' : 'RESOLVE'}
                                         </Button>
                                     </div>
                                 </div>

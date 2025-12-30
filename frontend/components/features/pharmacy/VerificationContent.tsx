@@ -16,6 +16,7 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { CustomDialog, type AlertConfig } from "@/components/ui/custom-dialog"
 import {
     getPharmacyProfile,
     uploadPharmacyDocument,
@@ -32,6 +33,11 @@ export function VerificationContent() {
     const [loading, setLoading] = React.useState(true)
     const [uploading, setUploading] = React.useState<string | null>(null)
     const [submitting, setSubmitting] = React.useState(false)
+
+    const [confirmConfig, setConfirmConfig] = React.useState<AlertConfig>({
+        isOpen: false,
+        title: "",
+    })
 
     const [error, setError] = React.useState<string | null>(null)
 
@@ -102,8 +108,7 @@ export function VerificationContent() {
         }
     }
 
-    const handleCancel = async () => {
-        if (!window.confirm("Are you sure you want to discard your verification request? This will return your status to incomplete.")) return
+    const confirmCancel = async () => {
         setSubmitting(true)
         setError(null)
         try {
@@ -115,6 +120,17 @@ export function VerificationContent() {
         } finally {
             setSubmitting(false)
         }
+    }
+
+    const handleCancel = () => {
+        setConfirmConfig({
+            isOpen: true,
+            title: "Discard verification request?",
+            description: "Are you sure you want to discard your verification request? This will return your status to incomplete.",
+            variant: "destructive",
+            confirmLabel: "Discard",
+            onConfirm: confirmCancel,
+        })
     }
 
     const handleSubmit = async () => {
@@ -187,6 +203,10 @@ export function VerificationContent() {
 
     return (
         <div className="flex-1 bg-gray-50 px-4 py-8 md:p-8 pt-20 pb-24 md:pt-8 md:pb-8 overflow-auto">
+            <CustomDialog
+                {...confirmConfig}
+                onClose={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}
+            />
             <div className="max-w-4xl mx-auto space-y-8 relative">
                 {/* Error Banner */}
                 {error && (

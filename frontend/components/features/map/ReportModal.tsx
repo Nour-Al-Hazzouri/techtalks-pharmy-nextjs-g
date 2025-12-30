@@ -31,6 +31,12 @@ export function ReportModal({ pharmacyId, pharmacyName, isOpen, onClose }: Repor
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
+
+        if (reason.trim().length < 10) {
+            setError("Please provide at least 10 characters for the report.")
+            return
+        }
+
         setLoading(true)
         setError(null)
 
@@ -38,7 +44,7 @@ export function ReportModal({ pharmacyId, pharmacyName, isOpen, onClose }: Repor
             await submitReport({
                 pharmacy_id: pharmacyId,
                 report_type: reportType,
-                reason: reason.trim() || undefined
+                reason: reason.trim()
             })
             setSuccess(true)
             setTimeout(() => {
@@ -107,7 +113,7 @@ export function ReportModal({ pharmacyId, pharmacyName, isOpen, onClose }: Repor
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Details (Optional)</label>
+                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Details</label>
                                 <textarea
                                     className="w-full bg-gray-50 border-2 border-transparent focus:border-pink-200 focus:bg-white p-3 rounded-xl text-sm min-h-[100px] transition-all outline-none"
                                     placeholder="Tell us more about the issue..."
@@ -118,7 +124,7 @@ export function ReportModal({ pharmacyId, pharmacyName, isOpen, onClose }: Repor
 
                             <Button
                                 type="submit"
-                                disabled={loading}
+                                disabled={loading || reason.trim().length < 10}
                                 className="w-full h-12 bg-[#E91E63] hover:bg-[#D81B60] text-white rounded-xl font-bold transition-all shadow-lg shadow-pink-100"
                             >
                                 {loading ? (
