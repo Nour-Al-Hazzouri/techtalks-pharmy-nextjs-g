@@ -41,18 +41,6 @@ class MedicineController extends Controller
             return $this->errorResponse('Autocomplete failed: ' . $e->getMessage(), [], 500);
         }
     }
-
-    public function suggestions(Request $request)
-    {
-        try {
-            $request->validate(['limit' => 'sometimes|integer|min:1|max:20']);
-            $limit = (int) $request->query('limit', 5);
-            $results = $this->medicineService->suggestions($limit);
-            return $this->successResponse('Suggestions', $results);
-        } catch (\Exception $e) {
-            return $this->errorResponse('Suggestions failed: ' . $e->getMessage(), [], 500);
-        }
-    }
     
     public function nearest(Request $request)
     {

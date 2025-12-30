@@ -1,6 +1,5 @@
 export { AdminSidebar } from "./AdminSidebar"
 export { AdminStatsCard } from "./AdminStatsCard"
-export { UrgentReviewsSection } from "./UrgentReviewsSection"
 export { AdminQuickActions } from "./AdminQuickActions"
 export { AdminRecentActivity } from "./AdminRecentActivity"
 export { AdminDashboardContent } from "./AdminDashboardContent"
