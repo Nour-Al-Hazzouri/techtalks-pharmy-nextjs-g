@@ -36,6 +36,11 @@ export interface SearchedMedicine {
     pharmacies: PublicPharmacy[];
 }
 
+export interface MedicineSuggestion {
+    name: string;
+    category: string;
+}
+
 export interface GeocodeResult {
     place_id: number | string | null;
     display_name: string | null;
@@ -65,6 +70,10 @@ export async function searchMedicines(query: string): Promise<ApiResponse<Search
 
 export async function autocompleteMedicines(query: string): Promise<ApiResponse<Record<string, { name: string, category: string }[]>>> {
     return apiFetch<ApiResponse<Record<string, { name: string, category: string }[]>>>(`/medicines/autocomplete?query=${encodeURIComponent(query)}`);
+}
+
+export async function getMedicineSuggestions(limit: number = 5): Promise<ApiResponse<MedicineSuggestion[]>> {
+    return apiFetch<ApiResponse<MedicineSuggestion[]>>(`/medicines/suggestions?limit=${encodeURIComponent(String(limit))}`);
 }
 
 export async function findNearestPharmaciesWithMedicine(params: { name: string; lat: number; lng: number }): Promise<ApiResponse<PublicPharmacy[]>> {

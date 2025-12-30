@@ -23,6 +23,7 @@ Route::prefix('v1')->group(function () {
     // Medicine Routes (Public)
     Route::get('medicines/search', [MedicineController::class, 'search']);
     Route::get('medicines/autocomplete', [MedicineController::class, 'autocomplete']);
+    Route::get('medicines/suggestions', [MedicineController::class, 'suggestions']);
     Route::get('medicines/nearest', [MedicineController::class, 'nearest']);
 
     // Geocoding Routes (Public)

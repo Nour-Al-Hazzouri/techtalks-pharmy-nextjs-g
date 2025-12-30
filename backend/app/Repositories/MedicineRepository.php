@@ -13,6 +13,15 @@ class MedicineRepository
         return Medicine::where('name', $operator, "%{$name}%")->get();
     }
 
+    public function suggestions(int $limit = 5): Collection
+    {
+        return Medicine::query()
+            ->select('name', 'category')
+            ->orderBy('name')
+            ->limit($limit)
+            ->get();
+    }
+
     public function autocomplete(string $query): Collection
     {
         $operator = \Illuminate\Support\Facades\DB::connection()->getDriverName() === 'pgsql' ? 'ILIKE' : 'LIKE';

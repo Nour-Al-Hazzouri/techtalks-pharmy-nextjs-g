@@ -8,17 +8,32 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { useDebounce } from "@/hooks/use-debounce"
-import { POPULAR_SEARCHES } from "@/lib/mock-data"
-import { autocompleteMedicines } from "@/lib/api/public"
+import { autocompleteMedicines, getMedicineSuggestions } from "@/lib/api/public"
 
 export function MedicineSearchBar() {
     const router = useRouter()
     const [query, setQuery] = React.useState("")
     const [results, setResults] = React.useState<string[]>([])
+    const [suggestions, setSuggestions] = React.useState<string[]>([])
     const [isLoading, setIsLoading] = React.useState(false)
     const [showResults, setShowResults] = React.useState(false)
 
     const debouncedQuery = useDebounce(query, 300)
+
+    React.useEffect(() => {
+        const fetchSuggestions = async () => {
+            try {
+                const response = await getMedicineSuggestions(8)
+                if (response.data) {
+                    setSuggestions(response.data.map((s) => s.name).filter(Boolean).slice(0, 8))
+                }
+            } catch (error) {
+                console.error("Failed to load suggestions:", error)
+            }
+        }
+
+        fetchSuggestions()
+    }, [])
 
     React.useEffect(() => {
         const fetchAutocomplete = async () => {
@@ -118,18 +133,22 @@ export function MedicineSearchBar() {
                 </Button>
 
                 <div className="space-y-3 pt-2">
-                    <p className="text-xs text-gray-500 font-medium">Popular searches:</p>
-                    <div className="flex flex-wrap gap-2">
-                        {POPULAR_SEARCHES.map((term) => (
-                            <button
-                                key={term}
-                                className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs rounded-lg transition-colors"
-                                onClick={() => handleSearch(term)}
-                            >
-                                {term}
-                            </button>
-                        ))}
-                    </div>
+                    {suggestions.length > 0 && (
+                        <>
+                            <p className="text-xs text-gray-500 font-medium">Suggestions:</p>
+                            <div className="flex flex-wrap gap-2">
+                                {suggestions.map((term) => (
+                                    <button
+                                        key={term}
+                                        className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs rounded-lg transition-colors"
+                                        onClick={() => handleSearch(term)}
+                                    >
+                                        {term}
+                                    </button>
+                                ))}
+                            </div>
+                        </>
+                    )}
                 </div>
             </CardContent>
         </Card>

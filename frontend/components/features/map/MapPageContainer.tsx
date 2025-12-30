@@ -38,7 +38,6 @@ function mapApiToPharmacy(p: PublicPharmacy, medicine?: { name: string, generic_
         id: String(p.id),
         name: p.name,
         address: p.address,
-        rating: p.rating ? parseFloat(p.rating) : 4.5,
         phone: p.phone,
         license_number: p.license_number,
         verification_status: p.verification_status,

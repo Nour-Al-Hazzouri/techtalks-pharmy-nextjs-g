@@ -38,6 +38,11 @@ class MedicineService
         return $this->medicineRepo->autocomplete($query);
     }
 
+    public function suggestions(int $limit = 5)
+    {
+        return $this->medicineRepo->suggestions($limit);
+    }
+
     public function findNearest($medicineName, $lat, $lng)
     {
         // 1. Find the medicine
