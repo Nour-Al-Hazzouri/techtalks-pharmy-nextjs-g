@@ -33,6 +33,15 @@ class Pharmacy extends Model
         'rating' => 'decimal:2',
     ];
 
+    protected static function booted()
+    {
+        static::creating(function (Pharmacy $pharmacy) {
+            if (!$pharmacy->verification_status) {
+                $pharmacy->verification_status = 'incomplete';
+            }
+        });
+    }
+
     /* =========================
      | Relationships
      |=========================*/

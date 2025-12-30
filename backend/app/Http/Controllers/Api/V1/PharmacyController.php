@@ -102,10 +102,18 @@ class PharmacyController extends Controller
     }
 
     // Admin
-    public function adminIndex()
+    public function adminIndex(Request $request)
     {
-        $pharmacies = $this->pharmacyService->getAllPharmaciesAdmin();
-        return $this->successResponse('Admin Pharmacies list', PharmacyResource::collection($pharmacies)->response()->getData(true));
+        $filters = [];
+        if ($request->has('status')) {
+            $filters['status'] = $request->input('status');
+        }
+
+        $pharmacies = $this->pharmacyService->getAllPharmaciesAdmin($filters);
+        return $this->successResponse('Admin Pharmacies list', PharmacyResource::collection($pharmacies)->response()->getData(true))
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
     }
 
     public function approve($id)
@@ -146,6 +154,19 @@ class PharmacyController extends Controller
             $user = auth()->user();
             $pharmacy = $this->pharmacyService->getPharmacyProfile($user);
             if (!$pharmacy) return $this->errorResponse('Pharmacy not found', [], 404);
+
+            if (in_array($pharmacy->verification_status, ['pending', 'verified'], true)) {
+                return $this->errorResponse('Pharmacy is already submitted for verification.', [], 422);
+            }
+
+            $requiredDocTypes = ['Medical License', 'MOPH Permit'];
+            $uploadedTypes = $pharmacy->documents()->whereIn('doc_type', $requiredDocTypes)->pluck('doc_type')->unique()->values()->all();
+            $missing = array_values(array_diff($requiredDocTypes, $uploadedTypes));
+            if (!empty($missing)) {
+                return $this->errorResponse('Please upload all required documents before submitting verification.', [
+                    'missing_documents' => $missing,
+                ], 422);
+            }
 
             $this->pharmacyService->submitForVerification($pharmacy->id);
             return $this->successResponse('Verification request submitted');

@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { useDebounce } from "@/hooks/use-debounce"
-import { POPULAR_SEARCHES } from "@/lib/mock-data"
 import { autocompleteMedicines } from "@/lib/api/public"
 
 export function MedicineSearchBar() {
@@ -116,21 +115,6 @@ export function MedicineSearchBar() {
                 >
                     Search Pharmacies
                 </Button>
-
-                <div className="space-y-3 pt-2">
-                    <p className="text-xs text-gray-500 font-medium">Popular searches:</p>
-                    <div className="flex flex-wrap gap-2">
-                        {POPULAR_SEARCHES.map((term) => (
-                            <button
-                                key={term}
-                                className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs rounded-lg transition-colors"
-                                onClick={() => handleSearch(term)}
-                            >
-                                {term}
-                            </button>
-                        ))}
-                    </div>
-                </div>
             </CardContent>
         </Card>
     )

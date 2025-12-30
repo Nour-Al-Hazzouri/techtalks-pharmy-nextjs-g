@@ -47,6 +47,7 @@ export async function apiFetch<T>(
 
     const response = await fetch(url, {
         ...options,
+        cache: options.cache ?? 'no-store',
         headers: {
             ...defaultHeaders,
             ...options.headers,

@@ -14,7 +14,6 @@ export interface Pharmacy {
     id: string
     name: string
     address: string;
-    rating: number
     phone: string
     license_number?: string
     verification_status?: string
@@ -24,21 +23,3 @@ export interface Pharmacy {
     availability?: MedicineStock[]
     isCheapest?: boolean
 }
-
-export const MOCK_PHARMACIES: Pharmacy[] = []
-
-export const MOCK_MEDICINES: any[] = []
-
-export const POPULAR_SEARCHES = [
-    "Panadol",
-    "Advil",
-    "Vitamin C",
-    "Masks",
-    "Sanitizer"
-]
-
-export const MOCK_DASHBOARD_STATS = {}
-export const MOCK_RECENT_ACTIVITY: any[] = []
-export const MOCK_CURRENT_PHARMACY = {}
-export const MOCK_USERS: any[] = []
-export const MOCK_PHARMACY_INVENTORY: any[] = []
