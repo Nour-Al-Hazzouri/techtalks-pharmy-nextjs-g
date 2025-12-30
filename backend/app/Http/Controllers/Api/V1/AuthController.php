@@ -32,9 +32,19 @@ class AuthController extends Controller
 
     public function login(LoginRequest $request)
     {
-        $token = $this->authService->login($request->validated());
+        $credentials = $request->validated();
+        $token = $this->authService->login($credentials);
         if (!$token) {
-            return $this->errorResponse('Unauthorized', [], 401);
+            $user = \App\Models\User::where('email', $credentials['email'])->first();
+            if (!$user) {
+                return $this->errorResponse('No account found with this email address.', [], 401);
+            }
+
+            if (!Hash::check($credentials['password'], $user->password)) {
+                return $this->errorResponse('Incorrect password. Please try again.', [], 401);
+            }
+
+            return $this->errorResponse('Unable to log in. Please try again later.', [], 401);
         }
 
         $user = auth('api')->user();

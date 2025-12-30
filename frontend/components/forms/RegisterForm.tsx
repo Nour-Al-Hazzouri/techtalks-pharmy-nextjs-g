@@ -95,14 +95,9 @@ export function RegisterForm() {
             if (error instanceof ApiError) {
                 // Handle validation errors from backend with status code
                 if (error.errors) {
-                    // Set field-specific errors
-                    Object.entries(error.errors).forEach(([field, messages]) => {
-                        const fieldName = field as keyof RegisterValues
-                        if (messages.length > 0) {
-                            form.setError(fieldName, { message: messages[0] })
-                        }
-                    })
-                    setApiError(`Error ${error.status}: Validation failed. Please check the fields above.`)
+                    // Keep only the top banner error to avoid duplicate messages (banner + inline field message).
+                    const fallbackMessage = `Error ${error.status}: Please check the highlighted fields and try again.`
+                    setApiError(error.message ? `Error ${error.status}: ${error.message}` : fallbackMessage)
                 } else {
                     setApiError(`Error ${error.status}: ${error.message}`)
                 }
