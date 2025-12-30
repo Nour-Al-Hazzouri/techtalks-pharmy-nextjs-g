@@ -22,7 +22,7 @@ export function PharmacyList({ pharmacies, onSelect }: PharmacyListProps) {
                 <p className="text-xs text-gray-500 mt-1">Sorted by distance • Click to see details</p>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50">
+            <div className="flex-1 overflow-y-auto p-4 pb-20 space-y-3 bg-gray-50">
                 {pharmacies.map((pharmacy) => (
                     <div key={pharmacy.id} onClick={() => onSelect(pharmacy)}>
                         <PharmacyCard pharmacy={pharmacy} />

@@ -346,7 +346,8 @@ export function ReportsContent() {
     }
 
     return (
-        <div className="max-w-7xl mx-auto space-y-8 py-12 px-4 md:px-6">
+        <div className="flex-1 overflow-y-auto">
+            <div className="w-full max-w-screen-2xl mx-auto space-y-8 px-4 py-4 pt-20 pb-24 md:px-6 md:py-6 md:pt-6 md:pb-6">
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900 leading-none">User Reports</h1>
@@ -480,6 +481,7 @@ export function ReportsContent() {
                 onStatusUpdate={handleUpdateStatus}
                 onVerificationUpdate={handleVerificationComplete}
             />
+            </div>
         </div>
     )
 }
