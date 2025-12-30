@@ -41,6 +41,7 @@ export function RegisterForm() {
     const [showPassword, setShowPassword] = React.useState(false)
     const [showConfirmPassword, setShowConfirmPassword] = React.useState(false)
     const [apiError, setApiError] = React.useState<string | null>(null)
+    const [successMessage, setSuccessMessage] = React.useState<string | null>(null)
 
     const form = useForm<RegisterValues>({
         resolver: zodResolver(registerSchema),
@@ -57,6 +58,7 @@ export function RegisterForm() {
     async function onSubmit(data: RegisterValues) {
         setIsPending(true)
         setApiError(null)
+        setSuccessMessage(null)
 
         try {
             // Map role and prepare request body
@@ -76,16 +78,22 @@ export function RegisterForm() {
             // For now, we set a placeholder - login integration will handle proper token
             document.cookie = `user_role=${backendRole}; path=/; max-age=86400; SameSite=Lax`
 
-            // Redirect based on role
-            if (backendRole === 'pharmacist') {
-                router.push('/dashboard')
-            } else {
-                router.push('/')
-            }
-            router.refresh()
+            // Show success message
+            setSuccessMessage("Registration successful! Redirecting...")
+
+            // Delay redirect to show success message
+            setTimeout(() => {
+                // Redirect based on role
+                if (backendRole === 'pharmacist') {
+                    router.push('/dashboard')
+                } else {
+                    router.push('/')
+                }
+                router.refresh()
+            }, 1500)
         } catch (error) {
             if (error instanceof ApiError) {
-                // Handle validation errors from backend
+                // Handle validation errors from backend with status code
                 if (error.errors) {
                     // Set field-specific errors
                     Object.entries(error.errors).forEach(([field, messages]) => {
@@ -94,11 +102,12 @@ export function RegisterForm() {
                             form.setError(fieldName, { message: messages[0] })
                         }
                     })
+                    setApiError(`Error ${error.status}: Validation failed. Please check the fields above.`)
                 } else {
-                    setApiError(error.message)
+                    setApiError(`Error ${error.status}: ${error.message}`)
                 }
             } else {
-                setApiError('An unexpected error occurred. Please try again.')
+                setApiError('Error: An unexpected error occurred. Please try again.')
                 console.error(error)
             }
         } finally {
@@ -119,6 +128,16 @@ export function RegisterForm() {
 
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    {/* Success Message Display */}
+                    {successMessage && (
+                        <div className="p-3 rounded-xl bg-green-100 border border-green-300 text-green-700 text-sm flex items-center gap-2">
+                            <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            </svg>
+                            {successMessage}
+                        </div>
+                    )}
+
                     {/* API Error Display */}
                     {apiError && (
                         <div className="p-3 rounded-xl bg-red-100 border border-red-300 text-red-700 text-sm">

@@ -10,6 +10,7 @@ import {
     ShieldCheck,
     Package,
     User as UserIcon,
+    Lock,
     LogOut,
     ChevronRight,
     MessageSquare,
@@ -27,6 +28,7 @@ const navItems: NavItem[] = [
     { label: "Manage Catalog", href: "/admin/catalog", icon: Package },
     { label: "User Reports", href: "/admin/reports", icon: MessageSquare },
     { label: "Profile", href: "/admin/profile", icon: UserIcon },
+    { label: "Change Password", href: "/admin/change-password", icon: Lock },
 ]
 
 const mobileLabels: Record<string, string> = {
@@ -35,6 +37,7 @@ const mobileLabels: Record<string, string> = {
     "/admin/catalog": "Catalog",
     "/admin/reports": "Reports",
     "/admin/profile": "Profile",
+    "/admin/change-password": "Password",
 }
 
 export function AdminSidebar() {
@@ -142,7 +145,7 @@ export function AdminSidebar() {
 
             {/* Mobile Bottom Navigation */}
             <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-100">
-                <ul className="grid grid-cols-5">
+                <ul className="grid grid-cols-6">
                     {navItems.map((item) => {
                         const isActive = mounted ? pathname === item.href : false
                         const Icon = item.icon
