@@ -20,13 +20,15 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => [
-        'https://techtalks-pharmy.netlify.app',
-        'https://techtalks-pharmy.netlify.app/',
+    'allowed_origins' => array_values(array_filter([
+        env('FRONTEND_URL', 'https://techtalks-pharmy.netlify.app'),
         'http://localhost:3000',
-    ],
+    ])),
 
-    'allowed_origins_patterns' => [],
+    'allowed_origins_patterns' => [
+        '/^https:\/\/[a-z0-9-]+--techtalks-pharmy\.netlify\.app$/',
+        '/^https:\/\/techtalks-pharmy\.netlify\.app$/',
+    ],
 
     'allowed_headers' => ['*'],
 
