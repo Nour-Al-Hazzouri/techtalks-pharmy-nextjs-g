@@ -1,6 +1,6 @@
 "use client"
 
-import { MapPin, X, LogOut, Menu, User as UserIcon, KeyRound, Settings, Navigation } from "lucide-react"
+import { MapPin, X, LogOut, Menu, User as UserIcon, KeyRound, Settings, Navigation, Search } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { logout } from "@/lib/api/auth"
 import { LocationSearchBar, SelectedLocation } from "./LocationSearchBar"
@@ -18,6 +18,7 @@ interface MapHeaderProps {
     activeView: DashboardView
     onViewChange: (view: DashboardView) => void
     onLocate?: () => void
+    onOpenSearch?: () => void
 }
 
 export function MapHeader({
@@ -28,7 +29,8 @@ export function MapHeader({
     onLocationClear,
     activeView,
     onViewChange,
-    onLocate
+    onLocate,
+    onOpenSearch
 }: MapHeaderProps) {
     const router = useRouter()
     const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false)
@@ -107,6 +109,20 @@ export function MapHeader({
 
                     {mobileMenuOpen && (
                         <div className="absolute right-0 top-full mt-2 w-56 bg-white border border-gray-100 rounded-xl shadow-lg overflow-hidden z-50">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    onOpenSearch?.()
+                                    setMobileMenuOpen(false)
+                                }}
+                                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-gray-50 text-gray-700"
+                            >
+                                <Search className="h-4 w-4" />
+                                <span>Search</span>
+                            </button>
+
+                            <div className="h-px bg-gray-100" />
+
                             {settingsItems.map((item) => (
                                 <button
                                     key={item.key}

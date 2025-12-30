@@ -322,6 +322,12 @@ export function MapPageContainer() {
                 activeView={activeView}
                 onViewChange={handleViewChange}
                 onLocate={handleLocateMe}
+                onOpenSearch={() => {
+                    setActiveView("map")
+                    setSelectedPharmacy(null)
+                    setIsPanelOpen(true)
+                    setSnap(0.5)
+                }}
             />
 
             <main className="flex-1 flex overflow-hidden relative">
@@ -396,11 +402,15 @@ export function MapPageContainer() {
                                     <DrawerDescription>List of available pharmacies</DrawerDescription>
                                 </DrawerHeader>
                                 {activeView === "map" && (
-                                    <ExpandableSearchBar
-                                        onSearch={(term) => handleSearch(term)}
-                                        currentQuery={searchQuery}
-                                        onClear={handleClearSearch}
-                                    />
+                                    <div className="shrink-0 pt-2 pb-3">
+                                        <div className="w-full max-w-[560px] mx-auto px-4">
+                                            <ExpandableSearchBar
+                                                onSearch={(term) => handleSearch(term)}
+                                                currentQuery={searchQuery}
+                                                onClear={handleClearSearch}
+                                            />
+                                        </div>
+                                    </div>
                                 )}
                                 {activeView === "profile" ? (
                                     <UserProfilePanel onBackToMap={handleBackToMap} />
