@@ -102,9 +102,14 @@ class PharmacyController extends Controller
     }
 
     // Admin
-    public function adminIndex()
+    public function adminIndex(Request $request)
     {
-        $pharmacies = $this->pharmacyService->getAllPharmaciesAdmin();
+        $filters = [];
+        if ($request->has('status')) {
+            $filters['status'] = $request->input('status');
+        }
+
+        $pharmacies = $this->pharmacyService->getAllPharmaciesAdmin($filters);
         return $this->successResponse('Admin Pharmacies list', PharmacyResource::collection($pharmacies)->response()->getData(true));
     }
 

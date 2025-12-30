@@ -55,9 +55,9 @@ class PharmacyService
     }
     
     // Admin methods
-    public function getAllPharmaciesAdmin()
+    public function getAllPharmaciesAdmin(array $filters = [])
     {
-        return $this->repo->getAdminList();
+        return $this->repo->getAdminList($filters);
     }
     
     public function approvePharmacy($id)

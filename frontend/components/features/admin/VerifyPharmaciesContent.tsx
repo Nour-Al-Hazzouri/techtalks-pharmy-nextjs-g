@@ -4,8 +4,7 @@ import * as React from "react"
 import { Search, MapPin, Phone, X, CheckCircle, Eye, ChevronLeft, XCircle, Loader2, Shield, FileText, Building2, Calendar, ShieldCheck, ShieldAlert, ExternalLink, Mail, User, AlertCircle, ZoomIn, ZoomOut, RotateCcw, Maximize2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 // Helper to map API data
-import { getPharmacies } from "@/lib/api/public"
-import { approvePharmacy, rejectPharmacy } from "@/lib/api/admin"
+import { approvePharmacy, rejectPharmacy, getAdminPharmacies } from "@/lib/api/admin"
 
 interface Pharmacy {
     id: string
@@ -322,7 +321,7 @@ export function VerifyPharmaciesContent() {
         const fetchPending = async () => {
             try {
                 // Fetch ONLY pharmacies with 'pending' status for verification queue
-                const res = await getPharmacies({ status: 'pending' })
+                const res = await getAdminPharmacies('pending')
                 if (res.status && res.data) {
                     const mapped = res.data.data.map((p: any) => ({
                         id: String(p.id),

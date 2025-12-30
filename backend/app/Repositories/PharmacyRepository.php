@@ -53,9 +53,15 @@ class PharmacyRepository
         return Pharmacy::where('pharmacist_id', $userId)->first();
     }
 
-    public function getAdminList(): LengthAwarePaginator
+    public function getAdminList(array $filters = []): LengthAwarePaginator
     {
-        return Pharmacy::with(['pharmacist', 'documents'])->paginate(10);
+        $query = Pharmacy::with(['pharmacist', 'documents']);
+
+        if (isset($filters['status'])) {
+            $query->where('verification_status', $filters['status']);
+        }
+
+        return $query->paginate(10);
     }
     
     public function getTopRated(): Collection
