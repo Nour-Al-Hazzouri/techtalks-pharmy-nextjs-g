@@ -70,8 +70,9 @@ export async function apiFetch<T>(
     })() : null;
 
     if (response.status === 401) {
-        // Token expired or invalid
-        if (typeof document !== 'undefined') {
+        // Only force-logout if the request was authenticated (token exists).
+        // This prevents failed login attempts from refreshing the page and clearing form inputs.
+        if (typeof document !== 'undefined' && token) {
             document.cookie = "auth_token=; path=/; max-age=0";
             document.cookie = "user_role=; path=/; max-age=0";
             window.location.href = '/login';
