@@ -127,6 +127,7 @@ export async function getAdminDashboardStats(): Promise<{
     rejected: number;
     totalMedicines: number;
 }> {
+<<<<<<< HEAD
     const [pendingRes, verifiedRes, rejectedRes, medicinesRes] = await Promise.all([
         getAdminPharmacies('pending'),
         getAdminPharmacies('verified'),
@@ -137,6 +138,17 @@ export async function getAdminDashboardStats(): Promise<{
     const pending = pendingRes.data?.meta?.total || 0;
     const verified = verifiedRes.data?.meta?.total || 0;
     const rejected = rejectedRes.data?.meta?.total || 0;
+=======
+    const [pharmaciesRes, medicinesRes] = await Promise.all([
+        apiFetch<ApiResponse<PaginatedResponse<AdminPharmacy>>>('/admin/pharmacies'),
+        apiFetch<ApiResponse<PaginatedResponse<Medicine>>>('/admin/medicines?page=1')
+    ]);
+
+    const pharmacies = pharmaciesRes.data?.data || [];
+    const pending = pharmacies.filter(p => p.verification_status === 'pending').length;
+    const verified = pharmacies.filter(p => p.verification_status === 'verified').length;
+    const rejected = pharmacies.filter(p => p.verification_status === 'rejected').length;
+>>>>>>> main
 
     return {
         pendingVerifications: pending,
