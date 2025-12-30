@@ -152,6 +152,19 @@ class PharmacyController extends Controller
             $pharmacy = $this->pharmacyService->getPharmacyProfile($user);
             if (!$pharmacy) return $this->errorResponse('Pharmacy not found', [], 404);
 
+            if (in_array($pharmacy->verification_status, ['pending', 'verified'], true)) {
+                return $this->errorResponse('Pharmacy is already submitted for verification.', [], 422);
+            }
+
+            $requiredDocTypes = ['Medical License', 'MOPH Permit'];
+            $uploadedTypes = $pharmacy->documents()->whereIn('doc_type', $requiredDocTypes)->pluck('doc_type')->unique()->values()->all();
+            $missing = array_values(array_diff($requiredDocTypes, $uploadedTypes));
+            if (!empty($missing)) {
+                return $this->errorResponse('Please upload all required documents before submitting verification.', [
+                    'missing_documents' => $missing,
+                ], 422);
+            }
+
             $this->pharmacyService->submitForVerification($pharmacy->id);
             return $this->successResponse('Verification request submitted');
         } catch (\Exception $e) {
