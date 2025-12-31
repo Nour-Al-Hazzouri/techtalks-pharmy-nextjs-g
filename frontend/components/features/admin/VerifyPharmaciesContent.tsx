@@ -60,7 +60,12 @@ function DocumentViewerModal({ document, onClose }: DocumentViewerModalProps) {
 
     const handleMouseUp = () => setIsDragging(false)
 
-    const isImage = /\.(jpg|jpeg|png)$/i.test(document.url)
+    const normalizedUrl = document.url?.startsWith("http://")
+        ? document.url.replace(/^http:\/\//i, "https://")
+        : document.url
+
+    const isImage = /\.(jpg|jpeg|png)(\?|#|$)/i.test(normalizedUrl)
+    const isPdf = /\.pdf(\?|#|$)/i.test(normalizedUrl)
 
     return (
         <div className="fixed inset-0 z-[110] bg-black/90 backdrop-blur-md flex flex-col animate-in fade-in duration-300">
@@ -100,7 +105,7 @@ function DocumentViewerModal({ document, onClose }: DocumentViewerModalProps) {
             >
                 {isImage ? (
                     <img
-                        src={document.url}
+                        src={normalizedUrl}
                         alt={document.name}
                         className="max-h-full transition-transform duration-75 ease-out select-none shadow-2xl"
                         style={{
@@ -108,17 +113,36 @@ function DocumentViewerModal({ document, onClose }: DocumentViewerModalProps) {
                         }}
                         draggable={false}
                     />
-                ) : (
+                ) : isPdf ? (
                     <iframe
-                        src={document.url}
+                        src={normalizedUrl}
                         className="w-full h-full border-none bg-white"
                         title={document.name}
                     />
+                ) : (
+                    <div className="w-full max-w-lg mx-auto bg-white rounded-2xl p-6 text-center space-y-4 shadow-2xl">
+                        <div className="h-14 w-14 rounded-2xl bg-gray-100 flex items-center justify-center mx-auto">
+                            <FileText className="h-7 w-7 text-gray-500" />
+                        </div>
+                        <div>
+                            <p className="text-sm font-bold text-gray-900">Preview not available</p>
+                            <p className="text-xs text-gray-500 mt-1">This file type can’t be previewed in the browser. Open it in a new tab to download/view.</p>
+                        </div>
+                        <a
+                            href={normalizedUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-xl bg-black text-white font-bold hover:bg-[#E91E63] transition-all"
+                        >
+                            <ExternalLink className="h-4 w-4" />
+                            Open Document
+                        </a>
+                    </div>
                 )}
             </div>
 
             <div className="p-4 bg-black/40 text-center text-white/40 text-[10px] font-medium uppercase tracking-[0.2em]">
-                {isImage ? "Drag to pan • Use controls to zoom" : "Previewing PDF document"}
+                {isImage ? "Drag to pan • Use controls to zoom" : isPdf ? "Previewing PDF document" : "Open document in a new tab"}
             </div>
         </div>
     )
@@ -333,7 +357,7 @@ export function VerifyPharmaciesContent() {
                         documents: (p.documents || []).map((d: any) => ({
                             id: String(d.id),
                             name: d.doc_type,
-                            url: d.file_url,
+                            url: typeof d.file_url === 'string' && d.file_url.startsWith('http://') ? d.file_url.replace(/^http:\/\//i, 'https://') : d.file_url,
                             verified: false
                         }))
                     }))
