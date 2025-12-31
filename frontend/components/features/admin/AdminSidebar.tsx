@@ -49,7 +49,6 @@ export function AdminSidebar() {
         setMounted(true)
     }, [])
 
-
     const handleLogout = async () => {
         try {
             await logout()

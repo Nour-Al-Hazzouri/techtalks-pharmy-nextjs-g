@@ -1,7 +1,8 @@
 "use client"
 
-import { MapPin, X, LogOut, Menu, User as UserIcon, KeyRound, Settings, Navigation, Search } from "lucide-react"
+import { LogOut, Menu, User as UserIcon, KeyRound, Settings, Navigation, Search } from "lucide-react"
 import { useRouter } from "next/navigation"
+import Image from "next/image"
 import { logout } from "@/lib/api/auth"
 import { LocationSearchBar, SelectedLocation } from "./LocationSearchBar"
 import { Button } from "@/components/ui/button"
@@ -60,9 +61,15 @@ export function MapHeader({
     return (
         <header className="w-full h-16 bg-white border-b border-gray-100 flex items-center justify-between px-3 sm:px-6 shrink-0 relative z-20 shadow-sm">
             <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 mr-2">
-                <div className="bg-[#E91E63] p-1.5 rounded-lg shrink-0">
-                    <MapPin className="text-white h-5 w-5" />
-                </div>
+                <Image
+                    src="/pharmy_logo.jpg"
+                    alt="Pharmy"
+                    width={36}
+                    height={36}
+                    className="h-9 w-9 rounded-md object-cover shrink-0"
+                    unoptimized
+                    priority
+                />
 
                 {searchQuery ? (
                     <div className="flex items-center gap-2 min-w-0 flex-1">

@@ -58,7 +58,6 @@ export function PharmacySidebar({
         setMounted(true)
     }, [])
 
-
     const handleLogout = async () => {
         try {
             await logout()

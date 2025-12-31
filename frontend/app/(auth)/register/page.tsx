@@ -1,6 +1,5 @@
 import { Metadata } from "next"
 import { RegisterForm } from "@/components/forms/RegisterForm"
-import Image from "next/image"
 
 export const metadata: Metadata = {
     title: "Create Account - Pharmy",
